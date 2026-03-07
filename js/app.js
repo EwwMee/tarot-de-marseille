@@ -442,6 +442,7 @@ function buildPrompt() {
 function highlightText(text) {
   text = text.replace(/\*\*(.+?)\*\*/g, '<strong class="hl-bold">$1</strong>');
   text = text.replace(/^([→•\-]\s*.+)$/gm, '<span class="hl-point">$1</span>');
+  text = text.replace(/^([^—\n]+?)(?=\s*—)/gm, '<strong>$1</strong>');
   return text;
 }
 
