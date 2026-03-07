@@ -310,11 +310,11 @@ nav{display:flex;border-bottom:1px solid var(--border);}
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div class="modal-body">
-      <div class="modal-sec"><div class="modal-sec-title">Mots-clés</div><div class="modal-kws" id="m-kws"></div></div>
-      <div class="modal-sec"><div class="modal-sec-title">Sens à l'endroit</div><div class="modal-text" id="m-upright"></div></div>
-      <div class="modal-sec modal-rev-block"><div class="modal-sec-title">Sens renversé</div><div class="modal-text" id="m-reversed"></div></div>
-      <div class="modal-sec"><div class="modal-sec-title">Symbolisme</div><div class="modal-text" id="m-symbolism"></div></div>
-      <div class="modal-sec"><div class="modal-sec-title">Domaines</div><div class="modal-text" id="m-domains"></div></div>
+      <div class="modal-sec"><div class="modal-sec-title" id="m-title-kws">Mots-clés</div><div class="modal-kws" id="m-kws"></div></div>
+      <div class="modal-sec"><div class="modal-sec-title" id="m-title-up">Sens à l'endroit</div><div class="modal-text" id="m-upright"></div></div>
+      <div class="modal-sec modal-rev-block"><div class="modal-sec-title" id="m-title-rev">Sens renversé</div><div class="modal-text" id="m-reversed"></div></div>
+      <div class="modal-sec"><div class="modal-sec-title" id="m-title-sym">Symbolisme</div><div class="modal-text" id="m-symbolism"></div></div>
+      <div class="modal-sec"><div class="modal-sec-title" id="m-title-dom">Domaines</div><div class="modal-text" id="m-domains"></div></div>
     </div>
   </div>
 </div>
@@ -344,6 +344,7 @@ var L = {
     chat_send: 'Envoyer',
     lib_title: 'Les 22 Arcanes Majeurs',
     you: 'Vous', ai: 'IA',
+    m_kws:'Mots-clés', m_up:"Sens à l'endroit", m_rev:'Sens renversé', m_sym:'Symbolisme', m_dom:'Domaines',
     cards: n => `${n} carte${n>1?'s':''}`,
     revs: n => `${n} renversée${n!==1?'s':''}`,
     sys: "Tu es un tarologue expert du Tarot de Marseille. Tu lis les tirages de façon directe, symbolique et concrète. Tu tutoies la personne. Chaque interprétation est ancrée dans la position et le sens de la carte.",
@@ -372,6 +373,7 @@ var L = {
     chat_send: 'Enviar',
     lib_title: 'Os 22 Arcanos Maiores',
     you: 'Tu', ai: 'IA',
+    m_kws:'Palavras-chave', m_up:'Significado direito', m_rev:'Significado invertido', m_sym:'Simbolismo', m_dom:'Domínios',
     cards: n => `${n} carta${n>1?'s':''}`,
     revs: n => `${n} invertida${n!==1?'s':''}`,
     sys: "És um especialista em Tarot de Marselha. Lês as tiragens de forma directa, simbólica e concreta. Tratas a pessoa por tu. Cada interpretação está ancorada na posição da carta e no seu sentido.",
@@ -422,6 +424,12 @@ function setLang(l) {
   const ci = s('chat-input'); if(ci) ci.placeholder = T.chat_ph;
   const cs = s('chat-send'); if(cs) cs.textContent = T.chat_send;
   buildSpreads();
+  buildLibrary();
+  const mk=document.getElementById('m-title-kws'); if(mk) mk.textContent=T.m_kws;
+  const mu=document.getElementById('m-title-up'); if(mu) mu.textContent=T.m_up;
+  const mr=document.getElementById('m-title-rev'); if(mr) mr.textContent=T.m_rev;
+  const ms=document.getElementById('m-title-sym'); if(ms) ms.textContent=T.m_sym;
+  const md=document.getElementById('m-title-dom'); if(md) md.textContent=T.m_dom;
 }
 
 const ARCANES=[
@@ -447,6 +455,31 @@ const ARCANES=[
   {num:19,roman:'XIX',name:'Le Soleil',altname:'La Clarté / The Sun',keywords:['Joie','Succès','Clarté','Vitalité'],upright:'Joie, succès, clarté d\'esprit, santé rayonnante, triomphe. Période lumineuse et épanouie.',reversed:'Joie partielle, excès d\'ego, optimisme aveugle.',symbolism:'Deux enfants dansent sous un soleil radieux. L\'innocence retrouvée.',domains:'Santé, enfants, réussite, mariage, créativité.'},
   {num:20,roman:'XX',name:'Le Jugement',altname:'La Résurrection / Judgement',keywords:['Appel','Réveil','Décision','Renaissance'],upright:'Appel intérieur à se transformer. Réveil de la conscience, bilan de vie, renaissance.',reversed:'Refus de l\'appel, culpabilité excessive, résurrection bloquée.',symbolism:'Un ange sonne la trompette. Le réveil est collectif et individuel.',domains:'Vocations, retour du passé, décisions définitives, prises de conscience.'},
   {num:21,roman:'XXI',name:'Le Monde',altname:"L'Univers / The World",keywords:['Accomplissement','Totalité','Succès','Intégration'],upright:'Accomplissement total, synthèse réussie, réalisation de soi. Harmonie avec l\'univers.',reversed:'Succès incomplet, voyage inachevé, dernier pas non franchi.',symbolism:'Une figure androgyne danse dans une couronne de laurier. Le cosmos intégré.',domains:'Voyage, diplôme, mariage, aboutissement, accomplissement.'}
+];
+
+const ARCANES_PT=[
+  {keywords:['Liberdade','Aventura','Inocência','Novo começo'],upright:'Início de uma jornada, salto para o desconhecido. Liberdade total, despreocupação criativa, confiança no universo.',reversed:'Imprudência excessiva, ingenuidade perigosa ou fuga das responsabilidades.',symbolism:'Caminha à beira do precipício sem olhar para baixo. A alma que avança sem o peso do passado.',domains:'Novos começos, viagens imprevistas, rupturas libertadoras, criatividade espontânea.'},
+  {keywords:['Vontade','Habilidade','Acção','Iniciativa'],upright:'Força da vontade e habilidade. Confiança em si, iniciativa, transformação da ideia em acto.',reversed:'Engano, manipulação, uso mal orientado dos talentos.',symbolism:'Levanta uma varinha em direcção ao céu. Canal entre a ideia e a realização.',domains:'Empreendedorismo, comunicação, projectos, habilidade.'},
+  {keywords:['Intuição','Mistério','Sabedoria','Interioridade'],upright:'Conhecimento interior, intuição profunda. Convite ao silêncio e à introspecção.',reversed:'Segredos prejudiciais, intuição ignorada, recusa de escutar a voz interior.',symbolism:'Guardiã do limiar entre o visível e o invisível, com um livro aberto no colo.',domains:'Vida interior, espiritualidade, não-ditos, estudos esotéricos.'},
+  {keywords:['Abundância','Fertilidade','Criação','Natureza'],upright:'Força criadora por excelência. Fertilidade, abundância, prazeres dos sentidos, maternidade.',reversed:'Esterilidade, bloqueio criativo, dependência afectiva, sufocamento.',symbolism:'Coroada na natureza florescente. Mãe, rainha e natureza unidas.',domains:'Maternidade, criação artística, abundância, corpo.'},
+  {keywords:['Autoridade','Estrutura','Estabilidade','Poder'],upright:'Ordem estabelecida, autoridade benevolente, estrutura sólida. Capacidade de governar e organizar.',reversed:'Tirania, rigidez excessiva, abuso de poder.',symbolism:'Num trono de pedra — princípio de ordem no mundo manifestado.',domains:'Carreira, liderança, pai, direito, política.'},
+  {keywords:['Tradição','Ensino','Orientação','Instituição'],upright:'Guardião das tradições, transmissor do saber. O mentor, guia espiritual.',reversed:'Dogmatismo, conformismo cego, manipulação espiritual.',symbolism:'Ponte entre o divino e o humano, entre duas colunas.',domains:'Religião, instituições, ensino, moral.'},
+  {keywords:['Escolha','Amor','União','Desejo'],upright:'Escolha crucial entre dois caminhos. Atracção, desejo, necessidade de decidir segundo os próprios valores.',reversed:'Hesitação, infidelidade, má escolha, conflito de valores.',symbolism:'Um homem entre duas mulheres, um anjo por cima. Arquétipo da encruzilhada existencial.',domains:'Relações amorosas, decisões morais, parcerias.'},
+  {keywords:['Vitória','Mestria','Movimento','Conquista'],upright:'Vitória pela vontade e domínio de si. Conquista, movimento em frente, sucesso merecido.',reversed:'Perda de controlo, arrogância, corrida sem direcção.',symbolism:'Um guerreiro conduz um carro puxado por duas esfinges opostas.',domains:'Ambição, desporto, transporte, competição.'},
+  {keywords:['Equidade','Verdade','Lei','Equilíbrio'],upright:'Equidade, verdade, consequências dos nossos actos. Julgamento justo, retorno ao equilíbrio.',reversed:'Injustiça, parcialidade, recusa de assumir, desequilíbrio.',symbolism:'Segurando espada e balança sem paixão. Lei impessoal — causa e efeito.',domains:'Legal, contratos, ética, karma.'},
+  {keywords:['Solitude','Sabedoria','Retiro','Busca'],upright:'Busca interior, retirada do mundo. Ilumina o próprio caminho. Reflexão necessária.',reversed:'Isolamento estéril, recusa do mundo, imobilismo.',symbolism:'Um velho avança sozinho com uma lanterna. A luz é a sua própria consciência.',domains:'Retiro, meditação, estudos, busca de sentido.'},
+  {keywords:['Destino','Mudança','Ciclos','Sorte'],upright:'Viragem do destino, mudança de ciclo. O que estava bloqueado volta a mover-se.',reversed:'Azar conjuntural, resistência à mudança, ciclos negativos.',symbolism:'Roda cósmica — nada é permanente.',domains:'Sorte, reviravoltas, oportunidades, karma.'},
+  {keywords:['Coragem','Suavidade','Resistência','Mestria'],upright:'Coragem interior, domínio dos instintos pela suavidade. Resistência, poder tranquilo.',reversed:'Covardia, medo, brutalidade, falta de confiança.',symbolism:'Uma mulher abre sem violência a boca de um leão.',domains:'Saúde, coragem, gestão das emoções, animais.'},
+  {keywords:['Suspensão','Entrega','Sacrifício','Espera'],upright:'Suspensão voluntária, sacrifício consentido. Espera fértil, iniciação pela inversão.',reversed:'Recusa de entregar, martírio, resistência à transformação.',symbolism:'Suspenso por um pé, calmo. A inversão revela o que estava oculto.',domains:'Transições, crises iniciáticas, lutos simbólicos.'},
+  {keywords:['Transformação','Fim de ciclo','Renovação','Passagem'],upright:'Fim de um ciclo, transformação profunda e necessária. O que deve morrer para que nasça o novo.',reversed:'Resistência à transformação, estagnação, luto mal atravessado.',symbolism:'Um esqueleto ceifador deixa atrás de si novos rebentos.',domains:'Fins, lutos, transformações radicais, rupturas.'},
+  {keywords:['Equilíbrio','Moderação','Harmonia','Paciência'],upright:'Arte de dosar e misturar os contrários. Harmonia reencontrada, cura suave, alquimia interior.',reversed:'Excesso, impaciência, desequilíbrio, dissipação.',symbolism:'Um anjo transvaza um líquido de um cálice para outro.',domains:'Saúde, cura, relações equilibradas, arte.'},
+  {keywords:['Apego','Pulsão','Ilusão','Matéria'],upright:'As correntes que nos forjamos a nós próprios: adições, obsessões, pulsões não controladas.',reversed:'Libertação de uma dependência, tomada de consciência.',symbolism:'Duas personagens acorrentadas — as correntes estão frouxas. O aprisionamento é consentido.',domains:'Adições, pulsões, poder, dinheiro, medos.'},
+  {keywords:['Ruptura','Revelação','Choque','Colapso'],upright:'Ruptura súbita, colapso de estruturas não saudáveis. Crise libertadora, revelação fulgurante.',reversed:'Catástrofe evitada, recusa de aceitar o inevitável.',symbolism:'O relâmpago atinge uma torre. A destruição precede uma construção autêntica.',domains:'Crises, separações súbitas, revelações, colapsos.'},
+  {keywords:['Esperança','Inspiração','Cura','Orientação'],upright:'Esperança pura, orientação celeste, cura após a tempestade. Renovação espiritual, fé no futuro.',reversed:'Desespero, perda de fé, ilusões desfeitas.',symbolism:'Uma mulher verte água sob uma grande estrela. Nutre sem se esgotar.',domains:'Cura, arte, sonhos, vocação, espiritualidade.'},
+  {keywords:['Ilusão','Inconsciente','Ciclos','Medos'],upright:'O reino da ilusão e do inconsciente. Medos projectados, ciclos emocionais, intuição profunda.',reversed:'Confusão dissipada, medos superados, clareza emergente.',symbolism:'A lua ilumina sem certezas. Dois cães uivam à mesma luz ambígua.',domains:'Sonhos, intuição, medos ocultos, crises nocturnas.'},
+  {keywords:['Clareza','Sucesso','Vitalidade','Alegria'],upright:'Energia vital plena, sucesso claro, alegria autêntica. Clareza de mente, realização e celebração.',reversed:'Sucesso adiado, egocentrismo, energia bloqueada.',symbolism:'O sol brilha sobre dois gémeos dançando. Luz que não esconde nada.',domains:'Saúde, sucesso, infância, clareza, casamento.'},
+  {keywords:['Julgamento','Chamamento','Renovação','Despertar'],upright:'Chamamento interior irresistível. Despertar espiritual, segunda oportunidade, chamada da alma.',reversed:'Auto-julgamento duro, recusa de despertar, culpa não resolvida.',symbolism:'Um anjo toca a trombeta — os mortos ressuscitam para uma nova vida.',domains:'Vocação, cura, segunda oportunidade, legado.'},
+  {keywords:['Realização','Totalidade','Sucesso','Integração'],upright:'Realização total, síntese conseguida, realização de si. Harmonia com o universo.',reversed:'Sucesso incompleto, viagem inacabada, último passo por dar.',symbolism:'Uma figura andrógina dança numa coroa de louros. O cosmos integrado.',domains:'Viagem, diploma, casamento, conclusão, realização.'}
 ];
 
 const SPREADS=[
@@ -555,11 +588,13 @@ function buildSpreads(){
     </div>`).join('');
 }
 function buildLibrary(){
-  document.getElementById('lib-grid').innerHTML=ARCANES.map((a,i)=>`
-    <div class="lib-row" onclick="openModal(${i})">
-      <div class="lib-num">${a.roman}</div><div class="lib-name">${a.name}</div>
-      <div class="lib-kws">${a.keywords.map(k=>`<span class="lib-kw">${k}</span>`).join('')}</div>
-    </div>`).join('');
+  document.getElementById('lib-grid').innerHTML=ARCANES.map((a,i)=>{
+    const kws=(lang==='pt'?ARCANES_PT[i]:a).keywords;
+    return '<div class="lib-row" onclick="openModal('+i+')">'
+      +'<div class="lib-num">'+a.roman+'</div><div class="lib-name">'+a.name+'</div>'
+      +'<div class="lib-kws">'+kws.map(k=>'<span class="lib-kw">'+k+'</span>').join('')+'</div>'
+      +'</div>';
+  }).join('');
 }
 
 function selectSpread(i){
@@ -751,15 +786,15 @@ function scrollChat(){const el=document.getElementById('chat-messages');el.scrol
 // ─── MODALS ───
 function openModal(i){
   const a=ARCANES[i];
+  const pt=lang==='pt'?ARCANES_PT[i]:null;
   document.getElementById('m-roman').textContent=`Arcane ${a.roman}`;
   document.getElementById('m-name').textContent=a.name;
   document.getElementById('m-altname').textContent=a.altname;
-  document.getElementById('m-kws').innerHTML=a.keywords.map(k=>`<span class="modal-kw">${k}</span>`).join('');
-  document.getElementById('m-upright').textContent=a.upright;
-  document.getElementById('m-reversed').textContent=a.reversed;
-  document.getElementById('m-symbolism').textContent=a.symbolism;
-  document.getElementById('m-domains').textContent=a.domains;
-  document.getElementById('m-roman').textContent=`Arcane ${a.roman}`;
+  document.getElementById('m-kws').innerHTML=(pt||a).keywords.map(k=>`<span class="modal-kw">${k}</span>`).join('');
+  document.getElementById('m-upright').textContent=(pt||a).upright;
+  document.getElementById('m-reversed').textContent=(pt||a).reversed;
+  document.getElementById('m-symbolism').textContent=(pt||a).symbolism;
+  document.getElementById('m-domains').textContent=(pt||a).domains;
   document.getElementById('modal-overlay').classList.add('open');
 }
 function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
