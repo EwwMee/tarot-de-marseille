@@ -572,43 +572,51 @@ let currentLang = 'fr';
 function setLang(lang) {
   currentLang = lang;
   try { localStorage.setItem('tarot_lang', lang); } catch(e) {}
-  document.getElementById('lang-fr').classList.toggle('active', lang === 'fr');
-  document.getElementById('lang-pt').classList.toggle('active', lang === 'pt');
+  const $ = id => document.getElementById(id);
+  const $$ = sel => document.querySelector(sel);
   const t = LANG[lang];
-  document.getElementById('site-sub').textContent = t.site_sub;
-  document.querySelectorAll('.nav-tab')[0].textContent = t.nav_tirage;
-  document.querySelectorAll('.nav-tab')[1].textContent = t.nav_arcanes;
-  document.querySelector('.api-banner-title').textContent = t.session_title;
-  document.getElementById('user-name-input').placeholder = t.session_name_placeholder;
-  document.getElementById('groq-key-input').placeholder = t.session_key_placeholder;
-  document.querySelector('[onclick="startSession()"]').textContent = t.session_btn;
-  document.querySelector('.api-note').textContent = t.session_note;
-  const endBtn = document.querySelector('[onclick="endSession()"]');
-  if (endBtn) endBtn.textContent = t.session_end;
-  // rebuild if on step1
-  if (document.getElementById('step1').style.display !== 'none') {
-    buildSpreads();
-    buildLibrary();
-  }
-  // update static labels
-  const chooseLabel = document.querySelector('#step1 .section-label');
-  if (chooseLabel) chooseLabel.textContent = t.choose_spread;
-  const libLabel = document.querySelector('#screen-arcanes .section-label');
-  if (libLabel) libLabel.textContent = t.lib_title;
-  document.getElementById('btn-analyze').textContent = t.analyze_btn;
-  const chatHeader = document.querySelector('.chat-header-title');
-  if (chatHeader) chatHeader.textContent = t.deepen_title;
-  const chatDesc = document.querySelector('.chat-header-desc');
-  if (chatDesc) chatDesc.textContent = t.deepen_desc;
-  const chatInput = document.getElementById('chat-input');
-  if (chatInput) chatInput.placeholder = t.chat_placeholder;
-  const chatSend = document.getElementById('chat-send');
-  if (chatSend) chatSend.textContent = t.chat_send;
-  // modal labels
-  document.querySelectorAll('.modal-sec-title').forEach((el, i) => {
-    const labels = [t.keywords_label, t.upright_label, t.reversed_modal_label, t.symbolism_label, t.domains_label];
-    if (labels[i]) el.textContent = labels[i];
+  $('lang-fr').classList.toggle('active', lang==='fr');
+  $('lang-pt').classList.toggle('active', lang==='pt');
+  if($('site-sub')) $('site-sub').textContent = t.site_sub;
+  const tabs = document.querySelectorAll('.nav-tab');
+  if(tabs[0]) tabs[0].textContent = t.nav_tirage;
+  if(tabs[1]) tabs[1].textContent = t.nav_arcanes;
+  const bannerTitle = $$('.api-banner-title');
+  if(bannerTitle) bannerTitle.textContent = t.session_title;
+  const nameInput = $('user-name-input');
+  if(nameInput) nameInput.placeholder = t.session_name_placeholder;
+  const keyInput = $('groq-key-input');
+  if(keyInput) keyInput.placeholder = t.session_key_placeholder;
+  const startBtn = $$('[onclick="startSession()"]');
+  if(startBtn) startBtn.textContent = t.session_btn;
+  const apiNote = $$('.api-note');
+  if(apiNote) apiNote.textContent = t.session_note;
+  const endBtn = $$('[onclick="endSession()"]');
+  if(endBtn) endBtn.textContent = t.session_end;
+  const backBtn = $('back-btn');
+  if(backBtn) backBtn.textContent = t.back_btn;
+  const newBtn = $('new-btn');
+  if(newBtn) newBtn.textContent = t.new_btn;
+  const analyzeBtn = $('btn-analyze');
+  if(analyzeBtn) analyzeBtn.textContent = t.analyze_btn;
+  const chooseLabel = $$('#step1 .section-label');
+  if(chooseLabel) chooseLabel.textContent = t.choose_spread;
+  const libLabel = $$('#screen-arcanes .section-label');
+  if(libLabel) libLabel.textContent = t.lib_title;
+  const chatHeader = $$('.chat-header-title');
+  if(chatHeader) chatHeader.textContent = t.deepen_title;
+  const chatDesc = $$('.chat-header-desc');
+  if(chatDesc) chatDesc.textContent = t.deepen_desc;
+  const chatInput = $('chat-input');
+  if(chatInput) chatInput.placeholder = t.chat_placeholder;
+  const chatSend = $('chat-send');
+  if(chatSend) chatSend.textContent = t.chat_send;
+  document.querySelectorAll('.modal-sec-title').forEach((el,i)=>{
+    const labels=[t.keywords_label,t.upright_label,t.reversed_modal_label,t.symbolism_label,t.domains_label];
+    if(labels[i]) el.textContent=labels[i];
   });
+  buildSpreads();
+  buildLibrary();
 }
 
 function T() { return LANG[currentLang]; }
