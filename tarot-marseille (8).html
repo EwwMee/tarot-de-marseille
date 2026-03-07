@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tarot de Marseille</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0f0f0f;--surface:#161616;--surface2:#1e1e1e;
+  --border:#252525;--border-gold:#7a6828;
+  --gold:#c4a84f;--gold-dim:#5a4a20;
+  --text:#ddd8cc;--text-dim:#585040;--text-mid:#908070;
+  --crimson:#882020;--white:#ede8dc;
+}
+body{background:var(--bg);color:var(--text);font-family:'EB Garamond',serif;font-size:16px;line-height:1.65;min-height:100vh;}
+header{padding:36px 24px 24px;border-bottom:1px solid var(--border);text-align:center;}
+.site-title{font-family:'Cinzel',serif;font-size:19px;font-weight:400;color:var(--gold);letter-spacing:6px;text-transform:uppercase;}
+.site-sub{margin-top:5px;font-size:12px;color:var(--text-dim);letter-spacing:3px;font-style:italic;}
+nav{display:flex;border-bottom:1px solid var(--border);}
+.nav-tab{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-dim);font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;padding:14px;cursor:pointer;transition:color .2s,border-color .2s;}
+.nav-tab:hover{color:var(--text-mid);}
+.nav-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.screen{display:none;}.screen.active{display:block;}
+.container{max-width:820px;margin:0 auto;padding:36px 20px 80px;}
+.section-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--text-dim);margin-bottom:18px;}
+
+/* API BANNER */
+
+.btn{display:inline-block;background:none;border:1px solid var(--border-gold);color:var(--gold);font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;padding:13px 28px;cursor:pointer;transition:background .2s;width:100%;text-align:center;}
+.btn:hover{background:rgba(196,168,79,.07);}
+.btn:disabled{opacity:.25;cursor:not-allowed;border-color:var(--border);color:var(--text-dim);}
+.btn-ghost{border-color:var(--border);color:var(--text-dim);font-size:10px;padding:10px 24px;}
+.btn-ghost:hover{border-color:var(--text-mid);color:var(--text-mid);background:none;}
+.btn-sm{padding:9px 20px;font-size:9px;width:auto;}
+
+/* SPREADS */
+.spreads-list{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);}
+.spread-row{background:var(--bg);padding:16px 18px;cursor:pointer;display:flex;align-items:flex-start;gap:18px;transition:background .15s;border-left:2px solid transparent;}
+.spread-row:hover{background:var(--surface);border-left-color:var(--gold-dim);}
+.spread-row-num{font-family:'Cinzel',serif;font-size:10px;color:var(--text-dim);min-width:22px;padding-top:2px;}
+.spread-row-body{flex:1;}
+.spread-row-name{font-family:'Cinzel',serif;font-size:13px;color:var(--white);font-weight:400;margin-bottom:3px;}
+.spread-row-meta{font-size:13px;color:var(--text-dim);font-style:italic;}
+.spread-row-count{font-family:'Cinzel',serif;font-size:10px;color:var(--text-dim);white-space:nowrap;padding-top:2px;}
+
+/* VISUAL */
+.spread-visual-container{display:flex;justify-content:center;align-items:center;padding:32px 16px 36px;margin-bottom:24px;border:1px solid var(--border);background:var(--surface);overflow-x:auto;}
+.spread-layout{display:grid;gap:10px;flex-shrink:0;}
+.vcard{width:78px;height:126px;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 4px;transition:border-color .2s,background .2s,transform .15s;position:relative;gap:4px;}
+.vcard:hover{border-color:var(--gold-dim);background:var(--surface2);transform:translateY(-2px);}
+.vcard.filled{background:var(--surface2);border-color:var(--border-gold);}
+.vcard.reversed-v{border-color:var(--crimson)!important;}
+.vcard-num{font-family:'Cinzel',serif;font-size:8px;color:var(--text-dim);letter-spacing:1px;}
+.vcard.filled .vcard-num{color:var(--gold-dim);}
+.vcard-name{font-size:9px;color:var(--text-dim);text-align:center;line-height:1.3;}
+.vcard.filled .vcard-name{font-family:'Cinzel',serif;font-size:9px;color:var(--white);}
+.vcard-pos{font-size:8px;color:var(--text-dim);text-align:center;line-height:1.3;font-style:italic;padding:0 3px;}
+.vcard-rev-mark{position:absolute;top:4px;right:4px;font-size:7px;color:var(--crimson);}
+.vcard-pos-num{position:absolute;top:4px;left:5px;font-family:'Cinzel',serif;font-size:8px;color:var(--gold-dim);}
+.vcard-empty-line{width:20px;height:1px;background:var(--border);margin:2px 0;}
+.vghost{width:78px;height:126px;visibility:hidden;}
+
+/* POSITIONS */
+.positions-list{display:flex;flex-direction:column;gap:6px;margin-bottom:22px;}
+.position-slot{border:1px solid var(--border);display:flex;align-items:stretch;overflow:hidden;}
+.pos-label-block{padding:11px 13px;min-width:175px;border-right:1px solid var(--border);flex-shrink:0;}
+.pos-num{font-family:'Cinzel',serif;font-size:9px;color:var(--text-dim);letter-spacing:2px;margin-bottom:3px;}
+.pos-name{font-size:13px;color:var(--text-mid);font-style:italic;line-height:1.3;}
+.pos-card-block{flex:1;padding:10px 13px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;transition:background .15s;min-height:50px;}
+.pos-card-block:hover{background:var(--surface2);}
+.pos-card-block.filled{background:var(--surface);}
+.pos-card-placeholder{font-size:13px;color:var(--text-dim);font-style:italic;}
+.pos-card-name{font-family:'Cinzel',serif;font-size:13px;color:var(--white);}
+.pos-card-num{font-size:11px;color:var(--text-dim);margin-top:2px;}
+.pos-reversed-tag{color:var(--crimson);}
+.pos-clear{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:18px;padding:2px 6px;line-height:1;}
+.pos-clear:hover{color:var(--white);}
+.pos-reversed-toggle{font-size:10px;color:var(--text-dim);cursor:pointer;padding:4px 8px;border:1px solid var(--border);transition:all .15s;white-space:nowrap;background:none;font-family:'EB Garamond',serif;}
+.pos-reversed-toggle:hover{border-color:var(--crimson);color:var(--crimson);}
+.pos-reversed-toggle.on{border-color:var(--crimson);color:var(--crimson);}
+
+/* PICKER */
+.picker-overlay{position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:300;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;}
+.picker-overlay.open{display:flex;}
+.picker-modal{background:var(--surface);border:1px solid var(--border-gold);width:100%;max-width:680px;}
+.picker-header{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.picker-title{font-family:'Cinzel',serif;font-size:11px;color:var(--gold);letter-spacing:3px;}
+.picker-close{background:none;border:1px solid var(--border);color:var(--text-dim);width:28px;height:28px;cursor:pointer;font-size:13px;}
+.picker-close:hover{border-color:var(--text-dim);color:var(--white);}
+.picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:1px;background:var(--border);border-bottom:1px solid var(--border);}
+.picker-cell{background:var(--bg);padding:11px 10px;cursor:pointer;transition:background .12s;display:flex;flex-direction:column;gap:2px;}
+.picker-cell:hover{background:var(--surface2);}
+.picker-cell.taken{opacity:.2;pointer-events:none;}
+.pc-num{font-family:'Cinzel',serif;font-size:9px;color:var(--text-dim);letter-spacing:1px;}
+.pc-name{font-size:12px;color:var(--text);line-height:1.25;}
+.picker-footer{padding:12px 20px;display:flex;justify-content:flex-end;}
+
+/* RESULT */
+.analysis-header{margin-bottom:22px;}
+.analysis-spread{font-family:'Cinzel',serif;font-size:15px;color:var(--gold);letter-spacing:3px;margin-bottom:4px;}
+.analysis-meta{font-size:13px;color:var(--text-dim);font-style:italic;}
+.analysis-cards{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:1px;}
+.analysis-card{background:var(--bg);border-left:2px solid transparent;}
+.analysis-card.rev{border-left-color:var(--crimson);}
+.ac-row{display:flex;align-items:flex-start;gap:14px;padding:15px 18px;}
+.ac-pos-num{font-family:'Cinzel',serif;font-size:10px;color:var(--text-dim);min-width:18px;padding-top:2px;}
+.ac-body{flex:1;}
+.ac-pos-label{font-size:10px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;}
+.ac-card-name{font-family:'Cinzel',serif;font-size:14px;color:var(--white);}
+.analysis-card.rev .ac-card-name{color:#b89090;}
+.ac-arcanum{font-size:11px;color:var(--text-dim);margin-top:2px;}
+.ac-kws{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px;}
+.ac-kw{font-size:11px;color:var(--text-dim);border:1px solid var(--border);padding:2px 6px;}
+.reading-result{background:var(--surface);border:1px solid var(--border);border-top:none;}
+.reading-section{padding:22px 20px;border-bottom:1px solid var(--border);}
+.reading-section:last-child{border-bottom:none;}
+.reading-section-title{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold-dim);margin-bottom:12px;}
+.reading-text{font-size:15px;color:var(--text);line-height:1.9;font-style:italic;}
+.reading-text p{margin-bottom:12px;}.reading-text p:last-child{margin-bottom:0;}
+.reading-text strong{font-style:normal;color:var(--white);font-weight:500;}
+.loading-block{padding:40px 22px;text-align:center;}
+.loading-text{font-size:14px;color:var(--text-dim);font-style:italic;letter-spacing:2px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:.3;}50%{opacity:1;}}
+.error-block{padding:24px 20px;}
+.error-text{font-size:13px;color:var(--crimson);font-style:italic;line-height:1.8;}
+
+/* CHAT */
+.chat-section{margin-top:1px;border:1px solid var(--border);border-top:none;}
+.chat-header{padding:18px 20px;border-bottom:1px solid var(--border);background:var(--surface);}
+.chat-header-title{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold-dim);margin-bottom:4px;}
+.chat-header-desc{font-size:13px;color:var(--text-dim);font-style:italic;}
+.chat-messages{max-height:480px;overflow-y:auto;}
+.chat-msg{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;gap:14px;}
+.chat-msg:last-child{border-bottom:none;}
+.chat-msg.user{background:var(--bg);}
+.chat-msg.ai{background:var(--surface);}
+.chat-msg-role{font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;min-width:36px;padding-top:3px;flex-shrink:0;}
+.chat-msg.user .chat-msg-role{color:var(--gold-dim);}
+.chat-msg.ai .chat-msg-role{color:var(--text-dim);}
+.chat-msg-text{font-size:14px;color:var(--text);line-height:1.85;font-style:italic;flex:1;}
+.chat-msg.user .chat-msg-text{font-style:normal;color:var(--text-mid);}
+.chat-msg-text p{margin-bottom:10px;}.chat-msg-text p:last-child{margin-bottom:0;}
+.chat-msg-text strong{font-style:normal;color:var(--white);font-weight:500;}
+.chat-input-area{padding:16px 20px;border-top:1px solid var(--border);background:var(--surface2);display:flex;gap:10px;align-items:flex-end;}
+.chat-input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'EB Garamond',serif;font-size:15px;padding:11px 14px;resize:none;min-height:48px;max-height:140px;line-height:1.5;transition:border-color .2s;outline:none;}
+.chat-input:focus{border-color:var(--border-gold);}
+.chat-input::placeholder{color:var(--text-dim);font-style:italic;}
+.chat-send{background:none;border:1px solid var(--border-gold);color:var(--gold);font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:12px 16px;cursor:pointer;transition:background .2s;white-space:nowrap;flex-shrink:0;}
+.chat-send:hover{background:rgba(196,168,79,.08);}
+.chat-send:disabled{opacity:.3;cursor:not-allowed;}
+.chat-typing{padding:14px 20px;font-size:13px;color:var(--text-dim);font-style:italic;animation:pulse 2s infinite;border-bottom:1px solid var(--border);display:flex;gap:14px;}
+
+/* LIBRARY */
+.lib-grid{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);}
+.lib-row{background:var(--bg);padding:13px 18px;cursor:pointer;display:flex;align-items:flex-start;gap:14px;transition:background .15s;}
+.lib-row:hover{background:var(--surface);}
+.lib-num{font-family:'Cinzel',serif;font-size:9px;color:var(--text-dim);min-width:28px;padding-top:3px;letter-spacing:1px;}
+.lib-name{font-family:'Cinzel',serif;font-size:13px;color:var(--white);min-width:145px;font-weight:400;}
+.lib-kws{display:flex;gap:5px;flex-wrap:wrap;flex:1;}
+.lib-kw{font-size:11px;color:var(--text-dim);border:1px solid var(--border);padding:2px 6px;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:200;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border-gold);max-width:520px;width:100%;max-height:88vh;overflow-y:auto;}
+.modal-header{padding:22px 22px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;}
+.modal-roman{font-family:'Cinzel',serif;font-size:9px;color:var(--gold-dim);letter-spacing:3px;margin-bottom:3px;}
+.modal-name{font-family:'Cinzel',serif;font-size:18px;color:var(--gold);font-weight:400;margin-bottom:3px;}
+.modal-altname{font-size:13px;color:var(--text-dim);font-style:italic;}
+.modal-close{background:none;border:1px solid var(--border);color:var(--text-dim);width:28px;height:28px;cursor:pointer;font-size:13px;flex-shrink:0;}
+.modal-close:hover{border-color:var(--text-mid);color:var(--white);}
+.modal-body{padding:20px 22px 28px;}
+.modal-sec{margin-bottom:20px;}.modal-sec:last-child{margin-bottom:0;}
+.modal-sec-title{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold-dim);margin-bottom:8px;}
+.modal-kws{display:flex;gap:6px;flex-wrap:wrap;}
+.modal-kw{font-size:11px;border:1px solid var(--border-gold);padding:3px 8px;color:var(--text-mid);}
+.modal-text{font-size:14px;color:var(--text);line-height:1.85;font-style:italic;}
+.modal-rev-block{border-left:2px solid var(--crimson);padding-left:14px;}
+.modal-rev-block .modal-sec-title{color:var(--crimson);opacity:.8;}
+
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);}
+@media(max-width:560px){
+  .pos-label-block{min-width:110px;padding:10px;}
+  .picker-grid{grid-template-columns:repeat(auto-fill,minmax(82px,1fr));}
+  .lib-row{flex-wrap:wrap;}.lib-name{min-width:100%;margin-bottom:6px;}
+  .vcard{width:62px;height:100px;}.vghost{width:62px;height:100px;}
+  .vcard-name{font-size:8px;}.vcard-pos{font-size:7px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="site-title">Tarot de Marseille</div>
+  <div class="site-sub">Les Vingt-Deux Arcanes Majeurs</div>
+</header>
+
+<nav>
+  <button class="nav-tab active" onclick="showScreen('tirage',this)">Tirage</button>
+  <button class="nav-tab" onclick="showScreen('arcanes',this)">Arcanes</button>
+</nav>
+
+<div id="screen-tirage" class="screen active">
+  <div class="container">
+
+    <div id="step1">
+      <p class="section-label">Choisir un tirage</p>
+      <div class="spreads-list" id="spreads-list"></div>
+    </div>
+
+    <div id="step2" style="display:none">
+      <p class="section-label" id="step2-label"></p>
+      <p style="font-size:13px;color:var(--text-dim);font-style:italic;margin-bottom:22px;" id="step2-desc"></p>
+      <div class="spread-visual-container">
+        <div class="spread-layout" id="spread-layout"></div>
+      </div>
+      <div class="positions-list" id="positions-list"></div>
+      <button class="btn" id="btn-analyze" disabled onclick="runAnalysis()">Analyser le tirage →</button>
+      <div style="height:10px;"></div>
+      <button class="btn btn-ghost btn-sm" onclick="goStep1()">← Changer de tirage</button>
+    </div>
+
+    <div id="step3" style="display:none">
+      <div class="analysis-header">
+        <div class="analysis-spread" id="result-title"></div>
+        <div class="analysis-meta" id="result-meta"></div>
+      </div>
+      <div class="analysis-cards" id="result-cards"></div>
+      <div class="reading-result" id="reading-result"></div>
+      <div class="chat-section" id="chat-section" style="display:none">
+        <div class="chat-header">
+          <div class="chat-header-title">Approfondir</div>
+          <div class="chat-header-desc">Posez une question ou donnez du contexte — l'IA répond en tenant compte de vos cartes.</div>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area">
+          <textarea class="chat-input" id="chat-input" placeholder="Ex: Cette lecture concerne ma situation professionnelle…" rows="2" onkeydown="chatKeydown(event)"></textarea>
+          <button class="chat-send" id="chat-send" onclick="sendChatMessage()">Envoyer</button>
+        </div>
+      </div>
+      <div style="height:24px;"></div>
+      <button class="btn btn-ghost btn-sm" onclick="goStep1()">← Nouveau tirage</button>
+    </div>
+
+  </div>
+</div>
+
+<div id="screen-arcanes" class="screen">
+  <div class="container">
+    <p class="section-label">Les 22 Arcanes Majeurs</p>
+    <div class="lib-grid" id="lib-grid"></div>
+  </div>
+</div>
+
+<!-- PICKER -->
+<div class="picker-overlay" id="picker-overlay">
+  <div class="picker-modal">
+    <div class="picker-header">
+      <div class="picker-title" id="picker-title">Choisir une carte</div>
+      <button class="picker-close" onclick="closePicker()">✕</button>
+    </div>
+    <div class="picker-grid" id="picker-grid"></div>
+    <div class="picker-footer"><button class="btn btn-ghost btn-sm" onclick="closePicker()">Annuler</button></div>
+  </div>
+</div>
+
+<!-- ARCANE MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="maybeCloseModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-roman" id="m-roman"></div>
+        <div class="modal-name" id="m-name"></div>
+        <div class="modal-altname" id="m-altname"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-sec"><div class="modal-sec-title">Mots-clés</div><div class="modal-kws" id="m-kws"></div></div>
+      <div class="modal-sec"><div class="modal-sec-title">Sens à l'endroit</div><div class="modal-text" id="m-upright"></div></div>
+      <div class="modal-sec modal-rev-block"><div class="modal-sec-title">Sens renversé</div><div class="modal-text" id="m-reversed"></div></div>
+      <div class="modal-sec"><div class="modal-sec-title">Symbolisme</div><div class="modal-text" id="m-symbolism"></div></div>
+      <div class="modal-sec"><div class="modal-sec-title">Domaines</div><div class="modal-text" id="m-domains"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ARCANES=[
+  {num:0,roman:'0',name:'Le Mat',altname:'Le Fou / The Fool',keywords:['Liberté','Aventure','Innocence','Nouveau départ'],upright:'Début d\'un voyage, saut dans l\'inconnu. Liberté totale, insouciance créatrice, confiance en l\'univers.',reversed:'Imprudence excessive, naïveté dangereuse ou fuite des responsabilités.',symbolism:'Il marche au bord du précipice sans regarder en bas. L\'âme qui s\'engage sans le poids du passé.',domains:'Nouveaux commencements, voyages imprévus, ruptures libératrices, créativité spontanée.'},
+  {num:1,roman:'I',name:'Le Bateleur',altname:'Le Magicien / The Magician',keywords:['Volonté','Habileté','Action','Initiative'],upright:'Force de la volonté et habileté. Confiance en soi, initiative, transformation de l\'idée en acte.',reversed:'Tromperie, manipulation, usage mal orienté des talents.',symbolism:'Il lève une baguette vers le ciel. Canal entre l\'idée et la réalisation.',domains:'Entrepreneuriat, communication, projets, habileté.'},
+  {num:2,roman:'II',name:'La Papesse',altname:'La Grande Prêtresse / The High Priestess',keywords:['Intuition','Mystère','Sagesse','Intériorité'],upright:'Connaissance intérieure, intuition profonde. Invitation au silence et à l\'introspection.',reversed:'Secrets nuisibles, intuition ignorée, refus d\'écouter sa voix intérieure.',symbolism:'Gardienne du seuil entre le visible et l\'invisible, un livre ouvert sur les genoux.',domains:'Vie intérieure, spiritualité, non-dits, études ésotériques.'},
+  {num:3,roman:'III',name:"L'Impératrice",altname:'La Reine / The Empress',keywords:['Abondance','Fécondité','Création','Nature'],upright:'Force créatrice par excellence. Fécondité, abondance, plaisirs des sens, maternité.',reversed:'Stérilité, blocage créatif, dépendance affective, étouffement.',symbolism:'Couronnée dans la nature florissante. Mère, reine et nature unie.',domains:'Maternité, création artistique, abondance, corps.'},
+  {num:4,roman:'IV',name:"L'Empereur",altname:'Le Roi / The Emperor',keywords:['Autorité','Structure','Stabilité','Pouvoir'],upright:'Ordre établi, autorité bienveillante, structure solide. Capacité à gouverner et organiser.',reversed:'Tyrannie, rigidité excessive, abus de pouvoir.',symbolism:'Sur un trône de pierre — principe d\'ordre dans le monde manifesté.',domains:'Carrière, leadership, père, droit, politique.'},
+  {num:5,roman:'V',name:'Le Pape',altname:'Le Hiérophante / The Hierophant',keywords:['Tradition','Enseignement','Guidance','Institution'],upright:'Gardien des traditions, transmetteur du savoir. Le mentor, guide spirituel.',reversed:'Dogmatisme, conformisme aveugle, manipulation spirituelle.',symbolism:'Pont entre le divin et l\'humain, entre deux colonnes.',domains:'Religion, institutions, enseignement, morale.'},
+  {num:6,roman:'VI',name:"L'Amoureux",altname:'Les Amants / The Lovers',keywords:['Choix','Amour','Union','Désir'],upright:'Choix crucial entre deux voies. Attraction, désir, nécessité de décider selon ses valeurs.',reversed:'Hésitation, infidélité, mauvais choix, conflit de valeurs.',symbolism:'Un homme entre deux femmes, un ange au-dessus. Archétype du carrefour existentiel.',domains:'Relations amoureuses, décisions morales, partenariats.'},
+  {num:7,roman:'VII',name:'Le Chariot',altname:'Le Char / The Chariot',keywords:['Victoire','Maîtrise','Mouvement','Conquête'],upright:'Victoire par la volonté et la maîtrise de soi. Conquête, mouvement en avant, succès mérité.',reversed:'Perte de contrôle, arrogance, course sans direction.',symbolism:'Un guerrier conduit un char tiré par deux sphinges opposées.',domains:'Ambition, sport, transport, compétition.'},
+  {num:8,roman:'VIII',name:'La Justice',altname:'La Balance / Justice',keywords:['Équité','Vérité','Loi','Équilibre'],upright:'Équité, vérité, conséquences de nos actes. Jugement juste, retour à l\'équilibre.',reversed:'Injustice, biais, refus d\'assumer, déséquilibre.',symbolism:'Tenant épée et balance sans passion. Loi impersonnelle — cause et effet.',domains:'Légal, contrats, éthique, karma.'},
+  {num:9,roman:'IX',name:"L'Hermite",altname:'Le Sage / The Hermit',keywords:['Solitude','Sagesse','Retraite','Recherche'],upright:'Quête intérieure, retrait du monde. Il éclaire son propre chemin. Réflexion nécessaire.',reversed:'Isolement stérile, refus du monde, immobilisme.',symbolism:'Un vieillard avance seul avec une lanterne. La lumière est sa propre conscience.',domains:'Retraite, méditation, études, recherche de sens.'},
+  {num:10,roman:'X',name:'La Roue de Fortune',altname:'La Roue / Wheel of Fortune',keywords:['Destin','Changement','Cycles','Chance'],upright:'Tournant du destin, changement de cycle. Ce qui était bloqué se remet en mouvement.',reversed:'Malchance conjoncturelle, résistance au changement, cycles négatifs.',symbolism:'Roue cosmique — rien n\'est permanent.',domains:'Chance, retournements, opportunités, karma.'},
+  {num:11,roman:'XI',name:'La Force',altname:'Le Courage / Strength',keywords:['Courage','Douceur','Endurance','Maîtrise'],upright:'Courage intérieur, maîtrise des instincts par la douceur. Endurance, puissance tranquille.',reversed:'Lâcheté, peur, brutalité, manque de confiance.',symbolism:'Une femme ouvre sans violence la gueule d\'un lion.',domains:'Santé, courage, gestion des émotions, animaux.'},
+  {num:12,roman:'XII',name:'Le Pendu',altname:"L'Homme Pendu / The Hanged Man",keywords:['Suspension','Lâcher-prise','Sacrifice','Attente'],upright:'Suspension volontaire, sacrifice consenti. Attente fertile, initiation par l\'inversion.',reversed:'Refus de lâcher prise, martyre, résistance à la transformation.',symbolism:'Suspendu par un pied, calme. L\'inversion révèle ce qui était caché.',domains:'Transitions, crises initiatiques, deuils symboliques.'},
+  {num:13,roman:'XIII',name:'La Mort',altname:"L'Arcane sans nom / Death",keywords:['Transformation','Fin de cycle','Renouveau','Passage'],upright:'Fin d\'un cycle, transformation profonde et nécessaire. Ce qui doit mourir pour que naisse le nouveau.',reversed:'Résistance à la transformation, stagnation, deuil mal traversé.',symbolism:'Un squelette faucheur laisse derrière lui des pousses nouvelles.',domains:'Fins, deuils, transformations radicales, ruptures.'},
+  {num:14,roman:'XIV',name:'La Tempérance',altname:"L'Ange / Temperance",keywords:['Équilibre','Modération','Harmonie','Patience'],upright:'Art de doser et mélanger les contraires. Harmonie retrouvée, guérison douce, alchimie intérieure.',reversed:'Excès, impatience, déséquilibre, dissipation.',symbolism:'Un ange transvase un liquide d\'une coupe à l\'autre.',domains:'Santé, guérison, relations équilibrées, art.'},
+  {num:15,roman:'XV',name:'Le Diable',altname:'Satan / The Devil',keywords:['Attachement','Pulsion','Illusion','Matière'],upright:'Les chaînes que l\'on se forge soi-même : addictions, obsessions, pulsions non maîtrisées.',reversed:'Libération d\'une dépendance, prise de conscience.',symbolism:'Deux personnages enchaînés — les chaînes sont lâches. L\'emprisonnement est consenti.',domains:'Addictions, pulsions, pouvoir, argent, peurs.'},
+  {num:16,roman:'XVI',name:'La Maison-Dieu',altname:'La Tour / The Tower',keywords:['Rupture','Révélation','Choc','Effondrement'],upright:'Rupture soudaine, effondrement de structures non saines. Crise libératrice, révélation fulgurante.',reversed:'Catastrophe évitée, refus d\'accepter l\'inévitable.',symbolism:'La foudre frappe une tour. La destruction précède une construction authentique.',domains:'Crises, séparations soudaines, révélations, effondrements.'},
+  {num:17,roman:'XVII',name:"L'Étoile",altname:"L'Espérance / The Star",keywords:['Espoir','Inspiration','Guérison','Guidance'],upright:'Espoir pur, guidance céleste, guérison après la tempête. Renouveau spirituel, foi en l\'avenir.',reversed:'Désespoir, perte de foi, illusions déçues.',symbolism:'Une femme verse l\'eau sous une grande étoile. Elle nourrit sans s\'épuiser.',domains:'Guérison, art, rêves, vocation, spiritualité.'},
+  {num:18,roman:'XVIII',name:'La Lune',altname:'Le Rêve / The Moon',keywords:['Illusion','Rêve','Inconscient','Peur'],upright:'Territoire des illusions et de l\'inconscient. Peurs nocturnes, révélations profondes.',reversed:'Confusion dissipée ou plongée dans la paranoïa.',symbolism:'La lune éclaire sans révéler — chemin sinueux entre deux tours.',domains:'Inconscient, rêves, peurs, mensonges, cycles féminins.'},
+  {num:19,roman:'XIX',name:'Le Soleil',altname:'La Clarté / The Sun',keywords:['Joie','Succès','Clarté','Vitalité'],upright:'Joie, succès, clarté d\'esprit, santé rayonnante, triomphe. Période lumineuse et épanouie.',reversed:'Joie partielle, excès d\'ego, optimisme aveugle.',symbolism:'Deux enfants dansent sous un soleil radieux. L\'innocence retrouvée.',domains:'Santé, enfants, réussite, mariage, créativité.'},
+  {num:20,roman:'XX',name:'Le Jugement',altname:'La Résurrection / Judgement',keywords:['Appel','Réveil','Décision','Renaissance'],upright:'Appel intérieur à se transformer. Réveil de la conscience, bilan de vie, renaissance.',reversed:'Refus de l\'appel, culpabilité excessive, résurrection bloquée.',symbolism:'Un ange sonne la trompette. Le réveil est collectif et individuel.',domains:'Vocations, retour du passé, décisions définitives, prises de conscience.'},
+  {num:21,roman:'XXI',name:'Le Monde',altname:"L'Univers / The World",keywords:['Accomplissement','Totalité','Succès','Intégration'],upright:'Accomplissement total, synthèse réussie, réalisation de soi. Harmonie avec l\'univers.',reversed:'Succès incomplet, voyage inachevé, dernier pas non franchi.',symbolism:'Une figure androgyne danse dans une couronne de laurier. Le cosmos intégré.',domains:'Voyage, diplôme, mariage, aboutissement, accomplissement.'}
+];
+
+const SPREADS=[
+  {id:'ppf',name:'Passé · Présent · Futur',count:3,desc:'Le tirage fondamental. Trajectoire temporelle d\'une situation.',positions:['Le Passé — ce qui a mené ici','Le Présent — la situation actuelle','Le Futur — ce qui se profile'],layout:{type:'grid',cols:3,rows:1,slots:[{c:1,r:1},{c:2,r:1},{c:3,r:1}]}},
+  {id:'oui-non',name:'Oui / Non',count:3,desc:'Réponse directe à une question binaire.',positions:['Ce qui favorise le Oui','La réponse centrale','Ce qui favorise le Non'],layout:{type:'grid',cols:3,rows:1,slots:[{c:1,r:1},{c:2,r:1},{c:3,r:1}]}},
+  {id:'cae',name:'Corps · Âme · Esprit',count:3,desc:'Regard holistique sur l\'état d\'un être.',positions:['Le corps et l\'état physique','L\'âme et l\'état émotionnel','L\'esprit et l\'état mental'],layout:{type:'vertical'}},
+  {id:'croix',name:'Croix Celtique',count:5,desc:'Tirage approfondi sur une question centrale avec ses influences.',positions:['La situation actuelle','Ce qui aide ou s\'oppose','Le dessous de la question','Le passé récent','Le futur proche'],layout:{type:'grid',cols:3,rows:3,slots:[{c:2,r:2},{c:2,r:1},{c:2,r:3},{c:1,r:2},{c:3,r:2}]}},
+  {id:'amour',name:'Tirage Amoureux',count:5,desc:'État des deux parties, obstacles, dynamique et potentiel d\'une relation.',positions:['Vous dans la relation','L\'autre dans la relation','Le lien entre vous','Ce qui freine','Le potentiel de la relation'],layout:{type:'amour'}},
+  {id:'vie',name:'Chemin de Vie',count:7,desc:'Panorama complet : racines, présent, défis, ressources et destination.',positions:['Les racines, le fondement','La situation présente','L\'obstacle principal','La ressource cachée','Ce qui vient du passé','L\'aide extérieure','L\'horizon'],layout:{type:'grid',cols:4,rows:2,slots:[{c:1,r:2},{c:2,r:1},{c:3,r:2},{c:4,r:1},{c:1,r:1},{c:2,r:2},{c:4,r:2}]}},
+  {id:'fer',name:'Fer à Cheval',count:7,desc:'Tirage classique en arc — passé, présent, avenir avec influences.',positions:['Le passé lointain','Le passé récent','Le présent','Les obstacles futurs','Les personnes qui influencent','Ce qu\'il faut faire','Le résultat probable'],layout:{type:'fer'}},
+  {id:'decision',name:'À la Croisée des Chemins',count:6,desc:'Pour une décision entre deux options — chaque voie sur trois niveaux.',positions:['Voie A — ce qui attire','Voie A — les obstacles','Voie A — l\'issue probable','Voie B — ce qui attire','Voie B — les obstacles','Voie B — l\'issue probable'],layout:{type:'grid',cols:2,rows:3,slots:[{c:1,r:1},{c:1,r:2},{c:1,r:3},{c:2,r:1},{c:2,r:2},{c:2,r:3}]}}
+];
+
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
+
+let selectedSpread=null, slots=[], activeSlotIndex=null;
+let chatHistory=[], readingContext='';
+let groqKey='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';
+
+function previewKey(){
+  const st=document.getElementById('groq-status');
+  st.style.display='block';
+  if(v.length===0){st.textContent='Champ vide';st.className='api-status err';return;}
+  st.textContent='Aperçu ('+v.length+' car.) : '+v.substring(0,8)+'…'+v.substring(v.length-4);
+  st.className='api-status info';
+}
+
+// ─── GROQ CALL ───
+async function callGroq(messages){
+
+  const res=await fetch(GROQ_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+    body:JSON.stringify({model:GROQ_MODEL,messages,max_tokens:1200,temperature:0.7})
+  });
+  if(!res.ok){
+    const e=await res.json().catch(()=>({}));
+    throw new Error(e.error?.message||`Erreur HTTP ${res.status}`);
+  }
+  const data=await res.json();
+  return data.choices[0].message.content;
+}
+
+// ─── INIT ───
+function init(){buildSpreads();buildLibrary();}
+
+function buildSpreads(){
+  document.getElementById('spreads-list').innerHTML=SPREADS.map((s,i)=>`
+    <div class="spread-row" onclick="selectSpread(${i})">
+      <div class="spread-row-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="spread-row-body"><div class="spread-row-name">${s.name}</div><div class="spread-row-meta">${s.desc}</div></div>
+      <div class="spread-row-count">${s.count} carte${s.count>1?'s':''}</div>
+    </div>`).join('');
+}
+function buildLibrary(){
+  document.getElementById('lib-grid').innerHTML=ARCANES.map((a,i)=>`
+    <div class="lib-row" onclick="openModal(${i})">
+      <div class="lib-num">${a.roman}</div><div class="lib-name">${a.name}</div>
+      <div class="lib-kws">${a.keywords.map(k=>`<span class="lib-kw">${k}</span>`).join('')}</div>
+    </div>`).join('');
+}
+
+function selectSpread(i){
+  selectedSpread=SPREADS[i];
+  slots=selectedSpread.positions.map(()=>({arcanaIndex:null,reversed:false}));
+  document.getElementById('step1').style.display='none';
+  document.getElementById('step2').style.display='block';
+  document.getElementById('step2-label').textContent=selectedSpread.name;
+  document.getElementById('step2-desc').textContent=selectedSpread.desc;
+  renderAll(); window.scrollTo(0,0);
+}
+function goStep1(){
+  selectedSpread=null; slots=[]; chatHistory=[]; readingContext='';
+  document.getElementById('step3').style.display='none';
+  document.getElementById('step2').style.display='none';
+  document.getElementById('step1').style.display='block';
+  window.scrollTo(0,0);
+}
+
+// ─── RENDER ───
+function renderAll(){
+  renderVisualLayout(); renderPositionList();
+  document.getElementById('btn-analyze').disabled=slots.some(s=>s.arcanaIndex===null);
+}
+function renderVisualLayout(){
+  const L=selectedSpread.layout,el=document.getElementById('spread-layout');
+  el.innerHTML=''; el.removeAttribute('style');
+  if(L.type==='vertical'){el.style.cssText='display:flex;flex-direction:column;gap:10px;align-items:center;';el.innerHTML=slots.map((_,i)=>vcardHTML(i)).join('');return;}
+  if(L.type==='fer'){renderFer(el);return;}
+  if(L.type==='amour'){renderAmour(el);return;}
+  el.style.cssText=`display:grid;grid-template-columns:repeat(${L.cols},78px);grid-template-rows:repeat(${L.rows},126px);gap:10px;`;
+  const map={};L.slots.forEach((p,i)=>map[`${p.c},${p.r}`]=i);
+  let h='';
+  for(let r=1;r<=L.rows;r++)for(let c=1;c<=L.cols;c++){const k=`${c},${r}`;h+=k in map?`<div style="grid-column:${c};grid-row:${r};">${vcardHTML(map[k])}</div>`:`<div style="grid-column:${c};grid-row:${r};" class="vghost"></div>`;}
+  el.innerHTML=h;
+}
+function renderFer(el){
+  const arcRow=[1,1,2,2,2,1,1];
+  el.style.cssText='display:grid;grid-template-columns:repeat(7,78px);grid-template-rows:126px 40px 126px;gap:10px;';
+  el.innerHTML=Array.from({length:7},(_,i)=>`<div style="grid-column:${i+1};grid-row:${arcRow[i]===1?1:3};">${vcardHTML(i)}</div>`).join('');
+}
+function renderAmour(el){
+  el.style.cssText='display:grid;grid-template-columns:repeat(3,78px);grid-template-rows:repeat(3,126px);gap:10px;';
+  const pos=[{c:1,r:1,i:0},{c:3,r:1,i:1},{c:2,r:1,i:2},{c:2,r:2,i:3},{c:2,r:3,i:4}];
+  const used={};pos.forEach(p=>used[`${p.c},${p.r}`]=p.i);
+  let h='';
+  for(let r=1;r<=3;r++)for(let c=1;c<=3;c++){const k=`${c},${r}`;h+=k in used?`<div style="grid-column:${c};grid-row:${r};">${vcardHTML(used[k])}</div>`:`<div style="grid-column:${c};grid-row:${r};" class="vghost"></div>`;}
+  el.innerHTML=h;
+}
+function vcardHTML(i){
+  const slot=slots[i],pos=selectedSpread.positions[i],lbl=pos.split('—')[0].trim();
+  const filled=slot.arcanaIndex!==null,a=filled?ARCANES[slot.arcanaIndex]:null;
+  return `<div class="vcard${filled?' filled':''}${filled&&slot.reversed?' reversed-v':''}" onclick="openPicker(${i})" title="${lbl}">
+    <div class="vcard-pos-num">${i+1}</div>
+    ${filled?`${slot.reversed?'<div class="vcard-rev-mark">↑</div>':''}<div class="vcard-num">${a.roman}</div><div class="vcard-name">${a.name}</div>`:`<div class="vcard-empty-line"></div><div class="vcard-pos">${lbl}</div><div class="vcard-empty-line"></div>`}
+  </div>`;
+}
+function renderPositionList(){
+  document.getElementById('positions-list').innerHTML=slots.map((slot,i)=>{
+    const pos=selectedSpread.positions[i],parts=pos.split('—'),filled=slot.arcanaIndex!==null,a=filled?ARCANES[slot.arcanaIndex]:null;
+    return `<div class="position-slot">
+      <div class="pos-label-block"><div class="pos-num">POSITION ${i+1}</div><div class="pos-name">${parts[0].trim()}${parts[1]?' · '+parts[1].trim():''}</div></div>
+      <div class="pos-card-block${filled?' filled':''}" onclick="${filled?'':'openPicker('+i+')'}">
+        ${filled?`<div><div class="pos-card-name">${a.name}</div><div class="pos-card-num">Arcane ${a.roman}${slot.reversed?' · <span class="pos-reversed-tag">↑ Renversée</span>':''}</div></div>
+          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+            <button class="pos-reversed-toggle${slot.reversed?' on':''}" onclick="toggleReversed(event,${i})">${slot.reversed?'↑ Renversée':'Retourner'}</button>
+            <button class="pos-clear" onclick="clearSlot(event,${i})">×</button>
+          </div>`:`<span class="pos-card-placeholder">Cliquer pour choisir</span>`}
+      </div></div>`;
+  }).join('');
+}
+
+// ─── PICKER ───
+function openPicker(i){
+  activeSlotIndex=i;
+  const taken=slots.map(s=>s.arcanaIndex).filter(x=>x!==null);
+  document.getElementById('picker-title').textContent=`Position ${i+1} — ${selectedSpread.positions[i].split('—')[0].trim()}`;
+  document.getElementById('picker-grid').innerHTML=ARCANES.map((a,j)=>`
+    <div class="picker-cell${taken.includes(j)&&slots[i].arcanaIndex!==j?' taken':''}" onclick="pickCard(${j})">
+      <div class="pc-num">${a.roman}</div><div class="pc-name">${a.name}</div></div>`).join('');
+  document.getElementById('picker-overlay').classList.add('open');
+}
+function pickCard(j){if(activeSlotIndex===null)return;slots[activeSlotIndex]={arcanaIndex:j,reversed:false};closePicker();renderAll();}
+function closePicker(){document.getElementById('picker-overlay').classList.remove('open');activeSlotIndex=null;}
+function clearSlot(e,i){e.stopPropagation();slots[i]={arcanaIndex:null,reversed:false};renderAll();}
+function toggleReversed(e,i){e.stopPropagation();slots[i].reversed=!slots[i].reversed;renderAll();}
+
+// ─── ANALYSIS ───
+async function runAnalysis(){
+  document.getElementById('step2').style.display='none';
+  document.getElementById('step3').style.display='block';
+  chatHistory=[]; document.getElementById('chat-section').style.display='none';
+  document.getElementById('chat-messages').innerHTML='';
+  window.scrollTo(0,0);
+
+  const revCount=slots.filter(s=>s.reversed).length;
+  document.getElementById('result-title').textContent=selectedSpread.name;
+  document.getElementById('result-meta').textContent=`${slots.length} carte${slots.length>1?'s':''} · ${revCount} renversée${revCount!==1?'s':''}`;
+
+  document.getElementById('result-cards').innerHTML=slots.map((slot,i)=>{
+    const a=ARCANES[slot.arcanaIndex];
+    return `<div class="analysis-card${slot.reversed?' rev':''}">
+      <div class="ac-row"><div class="ac-pos-num">${i+1}</div><div class="ac-body">
+        <div class="ac-pos-label">${selectedSpread.positions[i]}</div>
+        <div class="ac-card-name">${a.name}</div>
+        <div class="ac-arcanum">Arcane ${a.roman}${slot.reversed?' · <span style="color:var(--crimson)">Renversée</span>':''}</div>
+        <div class="ac-kws">${a.keywords.map(k=>`<span class="ac-kw">${k}</span>`).join('')}</div>
+      </div></div></div>`;
+  }).join('');
+
+  document.getElementById('reading-result').innerHTML=`<div class="loading-block"><div class="loading-text">Lecture en cours · · ·</div></div>`;
+
+  readingContext=slots.map((slot,i)=>{
+    const a=ARCANES[slot.arcanaIndex];
+    return `Position ${i+1} (${selectedSpread.positions[i]}) : ${a.name} (Arcane ${a.roman})${slot.reversed?' RENVERSÉE':''}`;
+  }).join('\n');
+
+  const sysPrompt=`Tu es un tarologue expert du Tarot de Marseille. Tu lis les tirages de façon directe, symbolique et concrète. Tu tutoies la personne. Tu ne verses pas dans le vague — chaque interprétation est ancrée dans la position de la carte et son sens.`;
+
+  const userPrompt=buildPrompt();
+
+  try{
+    const raw=await callGroq([{role:'system',content:sysPrompt},{role:'user',content:userPrompt}]);
+    renderReading(raw);
+    chatHistory=[{role:'system',content:sysPrompt},{role:'user',content:userPrompt},{role:'assistant',content:raw}];
+    document.getElementById('chat-section').style.display='block';
+  }catch(err){
+    document.getElementById('reading-result').innerHTML=`<div class="error-block"><div class="error-text">${err.message}</div></div>`;
+  }
+}
+
+function buildPrompt(){
+  const lines=slots.map((slot,i)=>{
+    const a=ARCANES[slot.arcanaIndex];
+    return `Position ${i+1} (${selectedSpread.positions[i]}) : ${a.name} (Arcane ${a.roman})${slot.reversed?' — RENVERSÉE':''}\nMots-clés : ${a.keywords.join(', ')}\nSens endroit : ${a.upright}\nSens renversé : ${a.reversed}`;
+  }).join('\n\n');
+  return `Tirage : ${selectedSpread.name}
+Description : ${selectedSpread.desc}
+
+Cartes :
+${lines}
+
+Donne une lecture en deux parties :
+
+PARTIE 1 — CARTE PAR CARTE
+Pour chaque carte : son rôle dans sa position précise, en tenant compte du sens (endroit/renversé). 2-4 phrases par carte. Commence chaque carte par son nom en gras.
+
+PARTIE 2 — LECTURE GLOBALE
+Ce que ces cartes racontent ensemble : tensions, complémentarités, fil conducteur. 4-6 phrases. Conclus sur ce que ce tirage invite à faire ou considérer.`;
+}
+
+// ─── RENDER READING ───
+function renderReading(raw){
+  const p1=raw.match(/PARTIE\s*1[^:\n]*[:\n]([\s\S]*?)(?=PARTIE\s*2|$)/i);
+  const p2=raw.match(/PARTIE\s*2[^:\n]*[:\n]([\s\S]*)/i);
+  document.getElementById('reading-result').innerHTML=p1&&p2
+    ?`<div class="reading-section"><div class="reading-section-title">Carte par carte</div><div class="reading-text">${fmt(p1[1].trim())}</div></div>
+      <div class="reading-section"><div class="reading-section-title">Lecture globale</div><div class="reading-text">${fmt(p2[1].trim())}</div></div>`
+    :`<div class="reading-section"><div class="reading-section-title">Lecture</div><div class="reading-text">${fmt(raw)}</div></div>`;
+}
+
+function fmt(t){
+  return '<p>'+t.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/\*([^*]+)\*/g,'<em>$1</em>').replace(/\n{2,}/g,'</p><p>').replace(/\n/g,' ')+'</p>';
+}
+
+// ─── CHAT ───
+function chatKeydown(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChatMessage();}}
+
+async function sendChatMessage(){
+  const input=document.getElementById('chat-input'),msg=input.value.trim();
+  if(!msg)return;
+  input.value=''; document.getElementById('chat-send').disabled=true;
+  appendChatMsg('user',msg);
+  chatHistory.push({role:'user',content:msg});
+  const tid='t'+Date.now();
+  document.getElementById('chat-messages').insertAdjacentHTML('beforeend',
+    `<div class="chat-typing" id="${tid}"><span style="min-width:36px;font-family:Cinzel,serif;font-size:9px;letter-spacing:2px;color:var(--text-dim)">IA</span><span>· · ·</span></div>`);
+  scrollChat();
+  try{
+    const raw=await callGroq(chatHistory);
+    document.getElementById(tid)?.remove();
+    appendChatMsg('ai',raw);
+    chatHistory.push({role:'assistant',content:raw});
+  }catch(err){
+    document.getElementById(tid)?.remove();
+    appendChatMsg('ai',err.message);
+  }
+  document.getElementById('chat-send').disabled=false;
+  input.focus();
+}
+
+function appendChatMsg(role,text){
+  const el=document.createElement('div');
+  el.className=`chat-msg ${role}`;
+  el.innerHTML=`<div class="chat-msg-role">${role==='user'?'Vous':'IA'}</div><div class="chat-msg-text">${fmt(text)}</div>`;
+  document.getElementById('chat-messages').appendChild(el);
+  scrollChat();
+}
+function scrollChat(){const el=document.getElementById('chat-messages');el.scrollTop=el.scrollHeight;}
+
+// ─── MODALS ───
+function openModal(i){
+  const a=ARCANES[i];
+  document.getElementById('m-roman').textContent=`Arcane ${a.roman}`;
+  document.getElementById('m-name').textContent=a.name;
+  document.getElementById('m-altname').textContent=a.altname;
+  document.getElementById('m-kws').innerHTML=a.keywords.map(k=>`<span class="modal-kw">${k}</span>`).join('');
+  document.getElementById('m-upright').textContent=a.upright;
+  document.getElementById('m-reversed').textContent=a.reversed;
+  document.getElementById('m-symbolism').textContent=a.symbolism;
+  document.getElementById('m-domains').textContent=a.domains;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+function maybeCloseModal(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+
+function showScreen(id,btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active'); btn.classList.add('active');
+}
+
+init();
+</script>
+</body>
+</html>
