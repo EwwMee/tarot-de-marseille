@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tarot de Marseille</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNyIgZmlsbD0iIzFhM2E2YiIvPjxwYXRoIGQ9Ik0xNiA1IEwxNy44IDExLjIgTDI0IDExLjIgTDE5IDE0LjggTDIwLjggMjEgTDE2IDE3LjQgTDExLjIgMjEgTDEzIDE0LjggTDggMTEuMiBMMTQuMiAxMS4yIFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2M5NzgzMiIgc3Ryb2tlLXdpZHRoPSIxLjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIzIiBmaWxsPSJub25lIiBzdHJva2U9IiNjOTc4MzIiIHN0cm9rZS13aWR0aD0iMSIvPjwvc3ZnPg==">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA0NCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzk3ODMyIiBzdHJva2Utd2lkdGg9IjEuOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIyMiIgY3k9IjEwIiByPSI0Ii8+PHBhdGggZD0iTTIyIDE0djE0Ii8+PHBhdGggZD0iTTE0IDIwbDggNCA4LTQiLz48cGF0aCBkPSJNMTggMzZsNC04IDQgOCIvPjxwYXRoIGQ9Ik04IDMwYzQtMiA4IDIgMTQtMnMxMCAwIDE0LTIiLz48L3N2Zz4=">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
 :root{
@@ -234,6 +234,9 @@ nav{display:flex;background:rgba(255,255,255,.6);backdrop-filter:var(--blur);-we
 .ac-kw{font-size:11px;font-weight:500;color:var(--label-2);background:var(--fill);padding:3px 10px;border-radius:20px;}
 
 .reading-result{background:var(--glass-bg-strong);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-radius:0 0 var(--r-lg) var(--r-lg);overflow:hidden;box-shadow:var(--glass-shadow);border:1px solid var(--glass-border-outer);border-top:none;}
+.hl-bold{font-weight:700;color:var(--label);}
+.hl-point{display:block;padding:6px 12px 6px 14px;margin:4px 0;background:rgba(201,120,50,.07);border-left:3px solid var(--tint);border-radius:0 6px 6px 0;color:var(--label);font-weight:500;}
+.hl-caps{font-weight:700;letter-spacing:.5px;color:var(--tint);font-size:.92em;}
 .reading-section{padding:28px 24px;border-bottom:1px solid rgba(255,255,255,.5);}
 .reading-section:last-child{border-bottom:none;}
 .reading-section-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tint);margin-bottom:16px;}
@@ -481,7 +484,7 @@ var L = {
     m_kws:'Mots-clés', m_up:"Sens à l'endroit", m_rev:'Sens renversé', m_sym:'Symbolisme', m_dom:'Domaines',
     cards: n => `${n} carte${n>1?'s':''}`,
     revs: n => `${n} renversée${n!==1?'s':''}`,
-    sys: "Tu es un tarologue expert du Tarot de Marseille. Tu lis les tirages de façon directe, symbolique et concrète. Tu tutoies la personne. Chaque interprétation est ancrée dans la position et le sens de la carte.",
+    sys: "Tu es un tarologue expert du Tarot de Marseille. Tu lis les tirages de façon directe, symbolique et concrète. Tu tutoies la personne. Chaque interprétation est ancrée dans la position et le sens de la carte. Pour mettre en valeur les éléments importants, utilise **texte** pour les mots-clés essentiels. Pour les points d'action ou insights majeurs, commence la ligne par → suivi du texte. Structure ta réponse en PARTIE 1 (carte par carte) et PARTIE 2 (synthèse globale).",
     prompt: (name, desc, lines) => `Tirage : ${name}\nDescription : ${desc}\n\nCartes :\n${lines}\n\nDonne une lecture en deux parties :\n\nPARTIE 1 — CARTE PAR CARTE\nPour chaque carte : son rôle dans sa position précise, en tenant compte du sens. 2-4 phrases. Commence chaque carte par son nom en gras.\n\nPARTIE 2 — LECTURE GLOBALE\nCe que ces cartes racontent ensemble. 4-6 phrases. Conclus sur ce que ce tirage invite à considérer.`,
     spreads: null, // uses default SPREADS
   },
@@ -971,13 +974,23 @@ function buildPrompt(){
 }
 
 // ─── RENDER READING ───
+function highlightText(text){
+  // Bold anything between ** **
+  text = text.replace(/\*\*(.+?)\*\*/g, '<strong class="hl-bold">$1</strong>');
+  // Highlight lines starting with → or - or • as key points
+  text = text.replace(/^([→•\-]\s*.+)$/gm, '<span class="hl-point">$1</span>');
+  // Highlight CAPSLOCK words as section markers
+  text = text.replace(/\b([A-ZÀÂÉÈÊËÎÏÔÙÛÜ]{4,})\b/g, '<span class="hl-caps">$1</span>');
+  return text;
+}
 function renderReading(raw){
   const p1=raw.match(/PARTIE\s*1[^:\n]*[:\n]([\s\S]*?)(?=PARTIE\s*2|$)/i);
   const p2=raw.match(/PARTIE\s*2[^:\n]*[:\n]([\s\S]*)/i);
+  const fmtHL = s => fmt(highlightText(s));
   document.getElementById('reading-result').innerHTML=p1&&p2
-    ?`<div class="reading-section"><div class="reading-section-title">${t().card_by_card}</div><div class="reading-text">${fmt(p1[1].trim())}</div></div>
-      <div class="reading-section"><div class="reading-section-title">${t().global_r}</div><div class="reading-text">${fmt(p2[1].trim())}</div></div>`
-    :`<div class="reading-section"><div class="reading-section-title">${t().reading}</div><div class="reading-text">${fmt(raw)}</div></div>`;
+    ?`<div class="reading-section"><div class="reading-section-title">${t().card_by_card}</div><div class="reading-text">${fmtHL(p1[1].trim())}</div></div>
+      <div class="reading-section"><div class="reading-section-title">${t().global_r}</div><div class="reading-text">${fmtHL(p2[1].trim())}</div></div>`
+    :`<div class="reading-section"><div class="reading-section-title">${t().reading}</div><div class="reading-text">${fmtHL(raw)}</div></div>`;
 }
 
 function fmt(t){
