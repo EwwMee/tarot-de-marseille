@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tarot de Marseille</title>
+<title>Tarot do Mēcas</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0NCA0NCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYzk3ODMyIiBzdHJva2Utd2lkdGg9IjEuOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIyMiIgY3k9IjEwIiByPSI0Ii8+PHBhdGggZD0iTTIyIDE0djE0Ii8+PHBhdGggZD0iTTE0IDIwbDggNCA4LTQiLz48cGF0aCBkPSJNMTggMzZsNC04IDQgOCIvPjxwYXRoIGQ9Ik04IDMwYzQtMiA4IDIgMTQtMnMxMCAwIDE0LTIiLz48L3N2Zz4=">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;}
@@ -329,8 +329,8 @@ nav{display:flex;background:rgba(255,255,255,.6);backdrop-filter:var(--blur);-we
 <header>
   <div class="site-title">
     <span class="site-title-top">Tarot</span>
-    <span class="site-title-de">de</span>
-    <span class="site-title-bottom">Marseille</span>
+    <span class="site-title-de">do</span>
+    <span class="site-title-bottom">Mēcas</span>
   </div>
   <div class="site-sub" id="site-sub" style="display:none"></div>
   <div style="margin-top:14px;display:flex;justify-content:center;gap:1px;">
@@ -484,7 +484,7 @@ var L = {
     m_kws:'Mots-clés', m_up:"Sens à l'endroit", m_rev:'Sens renversé', m_sym:'Symbolisme', m_dom:'Domaines',
     cards: n => `${n} carte${n>1?'s':''}`,
     revs: n => `${n} renversée${n!==1?'s':''}`,
-    sys: "Tu es un tarologue expert du Tarot de Marseille. Tu lis les tirages de façon directe, symbolique et concrète. Tu tutoies la personne. Chaque interprétation est ancrée dans la position et le sens de la carte. Pour mettre en valeur les éléments importants, utilise **texte** pour les mots-clés essentiels. Pour les points d'action ou insights majeurs, commence la ligne par → suivi du texte. Structure ta réponse en PARTIE 1 (carte par carte) et PARTIE 2 (synthèse globale).",
+    sys: "Tu es un tarologue expert du Tarot do Mēcas. Tu lis les tirages de façon directe, symbolique et concrète. Tu tutoies la personne. Chaque interprétation est ancrée dans la position et le sens de la carte. Pour mettre en valeur les éléments importants, utilise **texte** pour les mots-clés essentiels. Pour les points d'action ou insights majeurs, commence la ligne par → suivi du texte. Structure ta réponse en PARTIE 1 (carte par carte) et PARTIE 2 (synthèse globale).",
     prompt: (name, desc, lines) => `Tirage : ${name}\nDescription : ${desc}\n\nCartes :\n${lines}\n\nDonne une lecture en deux parties :\n\nPARTIE 1 — CARTE PAR CARTE\nPour chaque carte : son rôle dans sa position précise, en tenant compte du sens. 2-4 phrases. Commence chaque carte par son nom en gras.\n\nPARTIE 2 — LECTURE GLOBALE\nCe que ces cartes racontent ensemble. 4-6 phrases. Conclus sur ce que ce tirage invite à considérer.`,
     spreads: null, // uses default SPREADS
   },
@@ -771,8 +771,8 @@ function shuffleDraw(){
     c.className='vcard filled';
     c.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:100%;">
         <span style="font-family:var(--font);font-size:6.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tint);">TAROT</span>
-        <span style="font-family:var(--font);font-size:5.5px;font-weight:400;letter-spacing:2.5px;text-transform:uppercase;color:var(--tint);opacity:.6;">de</span>
-        <span style="font-family:var(--font);font-size:6.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tint);">MARSEILLE</span>
+        <span style="font-family:var(--font);font-size:5.5px;font-weight:400;letter-spacing:2.5px;text-transform:uppercase;color:var(--tint);opacity:.6;">do</span>
+        <span style="font-family:var(--font);font-size:6.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tint);">MĒCAS</span>
       </div>`;
     c.style.cssText=`position:absolute;left:${cx}px;top:${cy}px;pointer-events:none;z-index:${ii+2};opacity:0;transition:opacity .15s;`;
     layout.appendChild(c);
