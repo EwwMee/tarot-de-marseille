@@ -216,13 +216,20 @@ nav{display:flex;border-bottom:1px solid var(--border);}
 <div id="screen-tirage" class="screen active">
   <div class="container">
 
-    <!-- API KEY BANNER -->
+    <!-- SESSION -->
     <div class="api-banner" id="api-banner">
-      <div class="api-banner-title">Clé API Groq</div>
-      <textarea id="groq-key-input" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Colle ta clé ici : gsk_…" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:monospace;font-size:13px;padding:10px 12px;resize:none;height:64px;outline:none;line-height:1.5;word-break:break-all;margin-bottom:8px;display:block;"></textarea>
-      <button class="api-btn" onclick="setGroqKey()" style="width:100%;">Confirmer</button>
-      <div class="api-note">Gratuit sur <a href="https://console.groq.com/keys" target="_blank">console.groq.com</a> · La clé reste en mémoire de la page uniquement.</div>
+      <div class="api-banner-title">Nouvelle session</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <input id="user-name-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" placeholder="Ton prénom" style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'EB Garamond',serif;font-size:15px;padding:9px 12px;outline:none;width:100%;">
+        <textarea id="groq-key-input" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Clé Groq — gsk_…" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:monospace;font-size:12px;padding:9px 12px;resize:none;height:56px;outline:none;word-break:break-all;"></textarea>
+        <button class="api-btn" onclick="startSession()" style="width:100%;padding:11px;">Commencer la session →</button>
+      </div>
+      <div class="api-note">Clé gratuite sur <a href="https://console.groq.com/keys" target="_blank">console.groq.com</a> · Stockée localement sur cet appareil.</div>
       <div id="groq-status" class="api-status" style="display:none;margin-top:7px;"></div>
+    </div>
+    <div id="session-bar" style="display:none;border:1px solid var(--border);background:var(--surface);padding:11px 18px;margin-bottom:24px;align-items:center;justify-content:space-between;gap:12px;">
+      <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--text-dim);letter-spacing:2px;">SESSION · <span id="session-name" style="color:var(--gold);"></span></div>
+      <button onclick="endSession()" style="background:none;border:1px solid var(--border);color:var(--text-dim);font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:6px 12px;cursor:pointer;">Terminer la session</button>
     </div>
 
     <div id="step1">
@@ -360,29 +367,44 @@ function previewKey(){
 }
 
 
-// ─── API KEY ───
-function setGroqKey(){
+// ─── SESSION ───
+function startSession(){
+  const name=document.getElementById('user-name-input').value.trim();
   const raw=document.getElementById('groq-key-input').value;
-  const v=raw.replace(/[\s\u00a0\u200b\ufeff]/g,'');
+  const key=raw.replace(/[\s\u00a0\u200b\ufeff]/g,'');
   const st=document.getElementById('groq-status');
-  if(v.length<10){st.textContent='Clé trop courte';st.className='api-status err';st.style.display='block';return;}
-  groqKey=v;
-  try{localStorage.setItem('groq_key',v);}catch(e){}
+  if(!name){st.textContent='Entre ton prénom';st.className='api-status err';st.style.display='block';return;}
+  if(key.length<10){st.textContent='Clé trop courte';st.className='api-status err';st.style.display='block';return;}
+  groqKey=key;
+  try{localStorage.setItem('groq_key',key);localStorage.setItem('groq_name',name);}catch(e){}
+  activateSession(name);
+}
+
+function activateSession(name){
+  document.getElementById('api-banner').style.display='none';
+  const bar=document.getElementById('session-bar');
+  bar.style.display='flex';
+  document.getElementById('session-name').textContent=name;
+}
+
+function endSession(){
+  try{localStorage.removeItem('groq_key');localStorage.removeItem('groq_name');}catch(e){}
+  groqKey='';
+  document.getElementById('session-bar').style.display='none';
+  document.getElementById('api-banner').style.display='block';
+  document.getElementById('user-name-input').value='';
   document.getElementById('groq-key-input').value='';
-  st.textContent='✓ Clé enregistrée et mémorisée';
-  st.className='api-status ok';st.style.display='block';
-  document.getElementById('api-banner').style.opacity='0.3';
+  document.getElementById('groq-status').style.display='none';
+  goStep1();
 }
 
 function loadSavedKey(){
   try{
-    const saved=localStorage.getItem('groq_key');
-    if(saved&&saved.length>10){
-      groqKey=saved;
-      const st=document.getElementById('groq-status');
-      st.textContent='✓ Clé mémorisée active';
-      st.className='api-status ok';st.style.display='block';
-      document.getElementById('api-banner').style.opacity='0.3';
+    const key=localStorage.getItem('groq_key');
+    const name=localStorage.getItem('groq_name');
+    if(key&&key.length>10&&name){
+      groqKey=key;
+      activateSession(name);
     }
   }catch(e){}
 }
