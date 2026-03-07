@@ -205,7 +205,11 @@ nav{display:flex;border-bottom:1px solid var(--border);}
 
 <header>
   <div class="site-title">Tarot de Marseille</div>
-  <div class="site-sub">Les Vingt-Deux Arcanes Majeurs</div>
+  <div class="site-sub" id="site-sub">Les Vingt-Deux Arcanes Majeurs</div>
+  <div style="margin-top:14px;display:flex;justify-content:center;gap:1px;">
+    <button id="btn-lang-fr" onclick="setLang('fr')" style="background:none;border:1px solid var(--border-gold);color:var(--gold);font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;padding:5px 16px;cursor:pointer;">FR</button>
+    <button id="btn-lang-pt" onclick="setLang('pt')" style="background:none;border:1px solid var(--border);color:var(--text-dim);font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;padding:5px 16px;cursor:pointer;">PT</button>
+  </div>
 
 </header>
 
@@ -316,6 +320,110 @@ nav{display:flex;border-bottom:1px solid var(--border);}
 </div>
 
 <script>
+// ─── LANG ───
+var L = {
+  fr: {
+    site_sub: 'Les Vingt-Deux Arcanes Majeurs',
+    nav_tirage: 'Tirage', nav_arcanes: 'Arcanes',
+    session_title: 'Nouvelle session',
+    name_ph: 'Ton prénom', key_ph: 'Clé Groq — gsk_…',
+    start_btn: 'Commencer la session →',
+    session_note: 'Clé gratuite sur console.groq.com · Stockée localement.',
+    end_btn: 'Terminer la session',
+    err_name: 'Entre ton prénom', err_key: 'Clé trop courte',
+    choose: 'Choisir un tirage',
+    analyze: 'Analyser le tirage →',
+    back: '← Changer de tirage', new_spread: '← Nouveau tirage',
+    pos_label: 'POSITION', click_pick: 'Cliquer pour choisir',
+    rev_label: '↑ Renversée', turn_btn: 'Retourner',
+    card_by_card: 'Carte par carte', global_r: 'Lecture globale', reading: 'Lecture',
+    loading: 'Lecture en cours · · ·',
+    deepen_title: 'Approfondir',
+    deepen_desc: "Posez une question ou donnez du contexte — l'IA répond en tenant compte de vos cartes.",
+    chat_ph: 'Ex: Cette lecture concerne ma situation professionnelle…',
+    chat_send: 'Envoyer',
+    lib_title: 'Les 22 Arcanes Majeurs',
+    you: 'Vous', ai: 'IA',
+    cards: n => `${n} carte${n>1?'s':''}`,
+    revs: n => `${n} renversée${n!==1?'s':''}`,
+    sys: "Tu es un tarologue expert du Tarot de Marseille. Tu lis les tirages de façon directe, symbolique et concrète. Tu tutoies la personne. Chaque interprétation est ancrée dans la position et le sens de la carte.",
+    prompt: (name, desc, lines) => `Tirage : ${name}\nDescription : ${desc}\n\nCartes :\n${lines}\n\nDonne une lecture en deux parties :\n\nPARTIE 1 — CARTE PAR CARTE\nPour chaque carte : son rôle dans sa position précise, en tenant compte du sens. 2-4 phrases. Commence chaque carte par son nom en gras.\n\nPARTIE 2 — LECTURE GLOBALE\nCe que ces cartes racontent ensemble. 4-6 phrases. Conclus sur ce que ce tirage invite à considérer.`,
+    spreads: null, // uses default SPREADS
+  },
+  pt: {
+    site_sub: 'Os Vinte e Dois Arcanos Maiores',
+    nav_tirage: 'Tiragem', nav_arcanes: 'Arcanos',
+    session_title: 'Nova sessão',
+    name_ph: 'O teu nome', key_ph: 'Chave Groq — gsk_…',
+    start_btn: 'Iniciar sessão →',
+    session_note: 'Chave gratuita em console.groq.com · Guardada localmente.',
+    end_btn: 'Terminar sessão',
+    err_name: 'Introduz o teu nome', err_key: 'Chave demasiado curta',
+    choose: 'Escolher uma tiragem',
+    analyze: 'Analisar a tiragem →',
+    back: '← Mudar de tiragem', new_spread: '← Nova tiragem',
+    pos_label: 'POSIÇÃO', click_pick: 'Clica para escolher',
+    rev_label: '↑ Invertida', turn_btn: 'Inverter',
+    card_by_card: 'Carta a carta', global_r: 'Leitura global', reading: 'Leitura',
+    loading: 'Leitura em curso · · ·',
+    deepen_title: 'Aprofundar',
+    deepen_desc: 'Faz uma pergunta ou dá contexto — a IA responde tendo em conta as tuas cartas.',
+    chat_ph: 'Ex: Esta leitura diz respeito à minha situação profissional…',
+    chat_send: 'Enviar',
+    lib_title: 'Os 22 Arcanos Maiores',
+    you: 'Tu', ai: 'IA',
+    cards: n => `${n} carta${n>1?'s':''}`,
+    revs: n => `${n} invertida${n!==1?'s':''}`,
+    sys: "És um especialista em Tarot de Marselha. Lês as tiragens de forma directa, simbólica e concreta. Tratas a pessoa por tu. Cada interpretação está ancorada na posição da carta e no seu sentido.",
+    prompt: (name, desc, lines) => `Tiragem : ${name}\nDescrição : ${desc}\n\nCartas :\n${lines}\n\nDá uma leitura em duas partes :\n\nPARTE 1 — CARTA A CARTA\nPara cada carta: o seu papel na posição exacta, tendo em conta o sentido. 2-4 frases. Começa cada carta com o nome a negrito.\n\nPARTE 2 — LEITURA GLOBAL\nO que estas cartas contam juntas. 4-6 frases. Conclui com o que esta tiragem convida a considerar.`,
+    spreads: [
+      {id:'ppf',name:'Passado · Presente · Futuro',count:3,desc:'A tiragem fundamental. Trajectória temporal de uma situação.',positions:['O Passado — o que levou até aqui','O Presente — a situação actual','O Futuro — o que se perfila'],layout:{type:'grid',cols:3,rows:1,slots:[{c:1,r:1},{c:2,r:1},{c:3,r:1}]}},
+      {id:'oui-non',name:'Sim / Não',count:3,desc:'Resposta directa a uma questão binária.',positions:['O que favorece o Sim','A resposta central','O que favorece o Não'],layout:{type:'grid',cols:3,rows:1,slots:[{c:1,r:1},{c:2,r:1},{c:3,r:1}]}},
+      {id:'cae',name:'Corpo · Alma · Espírito',count:3,desc:'Visão holística do estado de um ser.',positions:['O corpo e o estado físico','A alma e o estado emocional','O espírito e o estado mental'],layout:{type:'vertical'}},
+      {id:'croix',name:'Cruz Céltica',count:5,desc:'Tiragem aprofundada sobre uma questão central.',positions:['A situação actual','O que ajuda ou se opõe','O fundo da questão','O passado recente','O futuro próximo'],layout:{type:'grid',cols:3,rows:3,slots:[{c:2,r:2},{c:2,r:1},{c:2,r:3},{c:1,r:2},{c:3,r:2}]}},
+      {id:'amour',name:'Tiragem Amorosa',count:5,desc:'Estado das duas partes, obstáculos e potencial de uma relação.',positions:['Tu na relação','O outro na relação','O vínculo entre vós','O que trava','O potencial da relação'],layout:{type:'amour'}},
+      {id:'vie',name:'Caminho de Vida',count:7,desc:'Panorâmica completa: raízes, presente, desafios, recursos e destino.',positions:['As raízes, o alicerce','A situação presente','O obstáculo principal','O recurso oculto','O que vem do passado','A ajuda exterior','O horizonte'],layout:{type:'grid',cols:4,rows:2,slots:[{c:1,r:2},{c:2,r:1},{c:3,r:2},{c:4,r:1},{c:1,r:1},{c:2,r:2},{c:4,r:2}]}},
+      {id:'fer',name:'Ferradura',count:7,desc:'Tiragem clássica em arco — passado, presente, futuro com influências.',positions:['O passado distante','O passado recente','O presente','Os obstáculos futuros','As pessoas que influenciam','O que é preciso fazer','O resultado provável'],layout:{type:'fer'}},
+      {id:'decision',name:'Na Encruzilhada',count:6,desc:'Para uma decisão entre duas opções — cada via em três níveis.',positions:['Via A — o que atrai','Via A — os obstáculos','Via A — o desfecho provável','Via B — o que atrai','Via B — os obstáculos','Via B — o desfecho provável'],layout:{type:'grid',cols:2,rows:3,slots:[{c:1,r:1},{c:1,r:2},{c:1,r:3},{c:2,r:1},{c:2,r:2},{c:2,r:3}]}}
+    ],
+  }
+};
+
+var lang = 'fr';
+function t() { return L[lang]; }
+
+function setLang(l) {
+  lang = l;
+  try { localStorage.setItem('tarot_lang', l); } catch(e) {}
+  document.getElementById('btn-lang-fr').style.cssText = l==='fr'
+    ? "background:none;border:1px solid var(--border-gold);color:var(--gold);font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;padding:5px 16px;cursor:pointer;"
+    : "background:none;border:1px solid var(--border);color:var(--text-dim);font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;padding:5px 16px;cursor:pointer;";
+  document.getElementById('btn-lang-pt').style.cssText = l==='pt'
+    ? "background:none;border:1px solid var(--border-gold);color:var(--gold);font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;padding:5px 16px;cursor:pointer;"
+    : "background:none;border:1px solid var(--border);color:var(--text-dim);font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;padding:5px 16px;cursor:pointer;";
+  const T = t();
+  const s = id => document.getElementById(id);
+  const q = sel => document.querySelector(sel);
+  if(s('site-sub')) s('site-sub').textContent = T.site_sub;
+  const tabs = document.querySelectorAll('.nav-tab');
+  if(tabs[0]) tabs[0].textContent = T.nav_tirage;
+  if(tabs[1]) tabs[1].textContent = T.nav_arcanes;
+  const bt = q('.api-banner-title'); if(bt) bt.textContent = T.session_title;
+  const ni = s('user-name-input'); if(ni) ni.placeholder = T.name_ph;
+  const ki = s('groq-key-input'); if(ki) ki.placeholder = T.key_ph;
+  const sb = q('[onclick="startSession()"]'); if(sb) sb.textContent = T.start_btn;
+  const an = q('.api-note'); if(an) an.textContent = T.session_note;
+  const eb = q('[onclick="endSession()"]'); if(eb) eb.textContent = T.end_btn;
+  if(s('btn-analyze')) s('btn-analyze').textContent = T.analyze;
+  const cl = q('#step1 .section-label'); if(cl) cl.textContent = T.choose;
+  const ll = q('#screen-arcanes .section-label'); if(ll) ll.textContent = T.lib_title;
+  const ch = q('.chat-header-title'); if(ch) ch.textContent = T.deepen_title;
+  const cd = q('.chat-header-desc'); if(cd) cd.textContent = T.deepen_desc;
+  const ci = s('chat-input'); if(ci) ci.placeholder = T.chat_ph;
+  const cs = s('chat-send'); if(cs) cs.textContent = T.chat_send;
+  buildSpreads();
+}
+
 const ARCANES=[
   {num:0,roman:'0',name:'Le Mat',altname:'Le Fou / The Fool',keywords:['Liberté','Aventure','Innocence','Nouveau départ'],upright:'Début d\'un voyage, saut dans l\'inconnu. Liberté totale, insouciance créatrice, confiance en l\'univers.',reversed:'Imprudence excessive, naïveté dangereuse ou fuite des responsabilités.',symbolism:'Il marche au bord du précipice sans regarder en bas. L\'âme qui s\'engage sans le poids du passé.',domains:'Nouveaux commencements, voyages imprévus, ruptures libératrices, créativité spontanée.'},
   {num:1,roman:'I',name:'Le Bateleur',altname:'Le Magicien / The Magician',keywords:['Volonté','Habileté','Action','Initiative'],upright:'Force de la volonté et habileté. Confiance en soi, initiative, transformation de l\'idée en acte.',reversed:'Tromperie, manipulation, usage mal orienté des talents.',symbolism:'Il lève une baguette vers le ciel. Canal entre l\'idée et la réalisation.',domains:'Entrepreneuriat, communication, projets, habileté.'},
@@ -374,8 +482,8 @@ function startSession(){
   const raw=document.getElementById('groq-key-input').value;
   const key=raw.replace(/[\s\u00a0\u200b\ufeff]/g,'');
   const st=document.getElementById('groq-status');
-  if(!name){st.textContent='Entre ton prénom';st.className='api-status err';st.style.display='block';return;}
-  if(key.length<10){st.textContent='Clé trop courte';st.className='api-status err';st.style.display='block';return;}
+  if(!name){st.textContent=t().err_name;st.className='api-status err';st.style.display='block';return;}
+  if(key.length<10){st.textContent=t().err_key;st.className='api-status err';st.style.display='block';return;}
   groqKey=key;
   try{localStorage.setItem('groq_key',key);localStorage.setItem('groq_name',name);}catch(e){}
   activateSession(name);
@@ -401,6 +509,8 @@ function endSession(){
 
 function loadSavedKey(){
   try{
+    const savedLang=localStorage.getItem('tarot_lang');
+    if(savedLang==='fr'||savedLang==='pt'){lang=savedLang;setLang(savedLang);}
     const key=localStorage.getItem('groq_key');
     const name=localStorage.getItem('groq_name');
     if(key&&key.length>10&&name){
@@ -431,15 +541,17 @@ async function callGroq(messages){
 
 
 
+
 // ─── INIT ───
 function init(){buildSpreads();buildLibrary();}
 
 function buildSpreads(){
-  document.getElementById('spreads-list').innerHTML=SPREADS.map((s,i)=>`
+  const spreads=t().spreads||SPREADS;
+  document.getElementById('spreads-list').innerHTML=spreads.map((s,i)=>`
     <div class="spread-row" onclick="selectSpread(${i})">
       <div class="spread-row-num">${String(i+1).padStart(2,'0')}</div>
       <div class="spread-row-body"><div class="spread-row-name">${s.name}</div><div class="spread-row-meta">${s.desc}</div></div>
-      <div class="spread-row-count">${s.count} carte${s.count>1?'s':''}</div>
+      <div class="spread-row-count">${t().cards(s.count)}</div>
     </div>`).join('');
 }
 function buildLibrary(){
@@ -451,7 +563,7 @@ function buildLibrary(){
 }
 
 function selectSpread(i){
-  selectedSpread=SPREADS[i];
+  selectedSpread=(t().spreads||SPREADS)[i];
   slots=selectedSpread.positions.map(()=>({arcanaIndex:null,reversed:false}));
   document.getElementById('step1').style.display='none';
   document.getElementById('step2').style.display='block';
@@ -511,9 +623,9 @@ function renderPositionList(){
     return `<div class="position-slot">
       <div class="pos-label-block"><div class="pos-num">POSITION ${i+1}</div><div class="pos-name">${parts[0].trim()}${parts[1]?' · '+parts[1].trim():''}</div></div>
       <div class="pos-card-block${filled?' filled':''}" onclick="${filled?'':'openPicker('+i+')'}">
-        ${filled?`<div><div class="pos-card-name">${a.name}</div><div class="pos-card-num">Arcane ${a.roman}${slot.reversed?' · <span class="pos-reversed-tag">↑ Renversée</span>':''}</div></div>
+        ${filled?`<div><div class="pos-card-name">${a.name}</div><div class="pos-card-num">Arcane ${a.roman}${slot.reversed?' · <span class="pos-reversed-tag">'+t().rev_label+'</span>':''}</div></div>
           <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
-            <button class="pos-reversed-toggle${slot.reversed?' on':''}" onclick="toggleReversed(event,${i})">${slot.reversed?'↑ Renversée':'Retourner'}</button>
+            <button class="pos-reversed-toggle${slot.reversed?' on':''}" onclick="toggleReversed(event,${i})">${slot.reversed?t().rev_label:t().turn_btn}</button>
             <button class="pos-clear" onclick="clearSlot(event,${i})">×</button>
           </div>`:`<span class="pos-card-placeholder">Cliquer pour choisir</span>`}
       </div></div>`;
@@ -545,7 +657,7 @@ async function runAnalysis(){
 
   const revCount=slots.filter(s=>s.reversed).length;
   document.getElementById('result-title').textContent=selectedSpread.name;
-  document.getElementById('result-meta').textContent=`${slots.length} carte${slots.length>1?'s':''} · ${revCount} renversée${revCount!==1?'s':''}` ;
+  document.getElementById('result-meta').textContent=`${t().cards(slots.length)} · ${t().revs(revCount)}`;
 
   document.getElementById('result-cards').innerHTML=slots.map((slot,i)=>{
     const a=ARCANES[slot.arcanaIndex];
@@ -558,14 +670,14 @@ async function runAnalysis(){
       </div></div></div>`;
   }).join('');
 
-  document.getElementById('reading-result').innerHTML=`<div class="loading-block"><div class="loading-text">Lecture en cours · · ·</div></div>`;
+  document.getElementById('reading-result').innerHTML=`<div class="loading-block"><div class="loading-text">${t().loading}</div></div>`;
 
   readingContext=slots.map((slot,i)=>{
     const a=ARCANES[slot.arcanaIndex];
     return `Position ${i+1} (${selectedSpread.positions[i]}) : ${a.name} (Arcane ${a.roman})${slot.reversed?' RENVERSÉE':''}`;
   }).join('\n');
 
-  const sysPrompt=`Tu es un tarologue expert du Tarot de Marseille. Tu lis les tirages de façon directe, symbolique et concrète. Tu tutoies la personne. Tu ne verses pas dans le vague — chaque interprétation est ancrée dans la position de la carte et son sens.`;
+  const sysPrompt=t().sys;
 
   const userPrompt=buildPrompt();
 
@@ -584,7 +696,7 @@ function buildPrompt(){
     const a=ARCANES[slot.arcanaIndex];
     return `Position ${i+1} (${selectedSpread.positions[i]}) : ${a.name} (Arcane ${a.roman})${slot.reversed?' — RENVERSÉE':''}\nMots-clés : ${a.keywords.join(', ')}\nSens endroit : ${a.upright}\nSens renversé : ${a.reversed}`;
   }).join('\n\n');
-  return `Tirage : ${selectedSpread.name}\nDescription : ${selectedSpread.desc}\n\nCartes :\n${lines}\n\nDonne une lecture en deux parties :\n\nPARTIE 1 — CARTE PAR CARTE\nPour chaque carte : son rôle dans sa position précise, en tenant compte du sens (endroit/renversé). 2-4 phrases par carte. Commence chaque carte par son nom en gras.\n\nPARTIE 2 — LECTURE GLOBALE\nCe que ces cartes racontent ensemble : tensions, complémentarités, fil conducteur. 4-6 phrases. Conclus sur ce que ce tirage invite à faire ou considérer.`;
+  return t().prompt(selectedSpread.name, selectedSpread.desc, lines);
 }
 
 // ─── RENDER READING ───
@@ -592,9 +704,9 @@ function renderReading(raw){
   const p1=raw.match(/PARTIE\s*1[^:\n]*[:\n]([\s\S]*?)(?=PARTIE\s*2|$)/i);
   const p2=raw.match(/PARTIE\s*2[^:\n]*[:\n]([\s\S]*)/i);
   document.getElementById('reading-result').innerHTML=p1&&p2
-    ?`<div class="reading-section"><div class="reading-section-title">Carte par carte</div><div class="reading-text">${fmt(p1[1].trim())}</div></div>
-      <div class="reading-section"><div class="reading-section-title">Lecture globale</div><div class="reading-text">${fmt(p2[1].trim())}</div></div>`
-    :`<div class="reading-section"><div class="reading-section-title">Lecture</div><div class="reading-text">${fmt(raw)}</div></div>`;
+    ?`<div class="reading-section"><div class="reading-section-title">${t().card_by_card}</div><div class="reading-text">${fmt(p1[1].trim())}</div></div>
+      <div class="reading-section"><div class="reading-section-title">${t().global_r}</div><div class="reading-text">${fmt(p2[1].trim())}</div></div>`
+    :`<div class="reading-section"><div class="reading-section-title">${t().reading}</div><div class="reading-text">${fmt(raw)}</div></div>`;
 }
 
 function fmt(t){
@@ -630,7 +742,7 @@ async function sendChatMessage(){
 function appendChatMsg(role,text){
   const el=document.createElement('div');
   el.className=`chat-msg ${role}`;
-  el.innerHTML=`<div class="chat-msg-role">${role==='user'?'Vous':'IA'}</div><div class="chat-msg-text">${fmt(text)}</div>`;
+  el.innerHTML=`<div class="chat-msg-role">${role==='user'?t().you:t().ai}</div><div class="chat-msg-text">${fmt(text)}</div>`;
   document.getElementById('chat-messages').appendChild(el);
   scrollChat();
 }
