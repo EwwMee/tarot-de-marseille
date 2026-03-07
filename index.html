@@ -180,6 +180,15 @@ nav{display:flex;border-bottom:1px solid var(--border);}
 .modal-rev-block{border-left:2px solid var(--crimson);padding-left:14px;}
 .modal-rev-block .modal-sec-title{color:var(--crimson);opacity:.8;}
 
+.api-banner{border:1px solid var(--border);background:var(--surface);padding:16px 18px;margin-bottom:24px;}
+.api-banner-title{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold-dim);margin-bottom:10px;}
+.api-btn{background:none;border:1px solid var(--border-gold);color:var(--gold);font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:9px 14px;cursor:pointer;transition:background .2s;}
+.api-btn:hover{background:rgba(196,168,79,.08);}
+.api-note{font-size:12px;color:var(--text-dim);font-style:italic;margin-top:8px;line-height:1.6;}
+.api-note a{color:var(--gold-dim);}
+.api-status{font-size:12px;font-style:italic;}
+.api-status.ok{color:#5a9a5a;}
+.api-status.err{color:var(--crimson);}
 ::-webkit-scrollbar{width:3px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
 ::-webkit-scrollbar-thumb{background:var(--border);}
@@ -206,6 +215,15 @@ nav{display:flex;border-bottom:1px solid var(--border);}
 
 <div id="screen-tirage" class="screen active">
   <div class="container">
+
+    <!-- API KEY BANNER -->
+    <div class="api-banner" id="api-banner">
+      <div class="api-banner-title">Clé API Groq</div>
+      <textarea id="groq-key-input" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Colle ta clé ici : gsk_…" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:monospace;font-size:13px;padding:10px 12px;resize:none;height:64px;outline:none;line-height:1.5;word-break:break-all;margin-bottom:8px;display:block;"></textarea>
+      <button class="api-btn" onclick="setGroqKey()" style="width:100%;">Confirmer</button>
+      <div class="api-note">Gratuit sur <a href="https://console.groq.com/keys" target="_blank">console.groq.com</a> · La clé reste en mémoire de la page uniquement.</div>
+      <div id="groq-status" class="api-status" style="display:none;margin-top:7px;"></div>
+    </div>
 
     <div id="step1">
       <p class="section-label">Choisir un tirage</p>
@@ -326,12 +344,12 @@ const SPREADS=[
   {id:'decision',name:'À la Croisée des Chemins',count:6,desc:'Pour une décision entre deux options — chaque voie sur trois niveaux.',positions:['Voie A — ce qui attire','Voie A — les obstacles','Voie A — l\'issue probable','Voie B — ce qui attire','Voie B — les obstacles','Voie B — l\'issue probable'],layout:{type:'grid',cols:2,rows:3,slots:[{c:1,r:1},{c:1,r:2},{c:1,r:3},{c:2,r:1},{c:2,r:2},{c:2,r:3}]}}
 ];
 
-const GROQ_MODEL = 'llama-3.3-70b-versatile';
+const GROQ_MODEL = 'llama3-8b-8192';
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 let selectedSpread=null, slots=[], activeSlotIndex=null;
 let chatHistory=[], readingContext='';
-let groqKey='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';
+let groqKey='';
 
 function previewKey(){
   const st=document.getElementById('groq-status');
@@ -341,19 +359,36 @@ function previewKey(){
   st.className='api-status info';
 }
 
+
+// ─── API KEY ───
+function setGroqKey(){
+  const raw=document.getElementById('groq-key-input').value;
+  const v=raw.replace(/[\s\u00a0\u200b\ufeff]/g,'');
+  const st=document.getElementById('groq-status');
+  if(v.length<10){st.textContent='Clé trop courte';st.className='api-status err';st.style.display='block';return;}
+  groqKey=v;
+  document.getElementById('groq-key-input').value='';
+  st.textContent='✓ Clé enregistrée';
+  st.className='api-status ok';st.style.display='block';
+  document.getElementById('api-banner').style.opacity='0.5';
+}
+
 // ─── GROQ CALL ───
 async function callGroq(messages){
-
-  const res=await fetch(GROQ_URL,{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
-    body:JSON.stringify({model:GROQ_MODEL,messages,max_tokens:1200,temperature:0.7})
-  });
-  if(!res.ok){
-    const e=await res.json().catch(()=>({}));
-    throw new Error(e.error?.message||`Erreur HTTP ${res.status}`);
+  let res;
+  try{
+    res=await fetch(GROQ_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+      body:JSON.stringify({model:GROQ_MODEL,messages,max_tokens:1200,temperature:0.7})
+    });
+  }catch(e){
+    throw new Error('Fetch failed: '+e.message);
   }
-  const data=await res.json();
+  const text=await res.text();
+  let data;
+  try{data=JSON.parse(text);}catch(e){throw new Error('Bad response: '+text.substring(0,200));}
+  if(!res.ok) throw new Error((data.error&&data.error.message)||'HTTP '+res.status+' '+text.substring(0,200));
   return data.choices[0].message.content;
 }
 
