@@ -104,6 +104,12 @@ nav{display:flex;background:rgba(255,255,255,.6);backdrop-filter:var(--blur);-we
 .btn:disabled{opacity:.28;cursor:not-allowed;transform:none;}
 
 
+.question-block{margin-top:18px;}
+.question-label{display:block;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--label-3);margin-bottom:8px;}
+.question-optional{font-weight:400;letter-spacing:0;text-transform:none;font-size:11px;color:var(--label-3);opacity:.7;}
+.question-input{width:100%;background:rgba(255,255,255,.55);backdrop-filter:var(--blur-sm);-webkit-backdrop-filter:var(--blur-sm);border:1px solid var(--glass-border-outer);border-radius:var(--r);padding:10px 14px;font-family:var(--font);font-size:14px;color:var(--label);resize:none;outline:none;transition:border-color .15s;box-sizing:border-box;}
+.question-input:focus{border-color:var(--tint);}
+.question-input::placeholder{color:var(--label-3);}
 .step2-header{margin-bottom:20px;}
 .step2-title{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--label-3);margin-bottom:6px;}
 .step2-desc{font-size:14px;color:var(--label-2);line-height:1.5;}
@@ -233,10 +239,9 @@ nav{display:flex;background:rgba(255,255,255,.6);backdrop-filter:var(--blur);-we
 .ac-kws{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
 .ac-kw{font-size:11px;font-weight:500;color:var(--label-2);background:var(--fill);padding:3px 10px;border-radius:20px;}
 
-.reading-result{background:var(--glass-bg-strong);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-radius:0 0 var(--r-lg) var(--r-lg);overflow:hidden;box-shadow:var(--glass-shadow);border:1px solid var(--glass-border-outer);border-top:none;}
-.hl-bold{font-weight:700;color:var(--label);}
-.hl-point{display:block;padding:6px 12px 6px 14px;margin:4px 0;background:rgba(201,120,50,.07);border-left:3px solid var(--tint);border-radius:0 6px 6px 0;color:var(--label);font-weight:500;}
-.hl-caps{font-weight:700;letter-spacing:.5px;color:var(--tint);font-size:.92em;}
+.reading-result{background:var(--glass-bg-strong);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--glass-shadow);border:1px solid var(--glass-border-outer);margin-top:20px;}
+.hl-em{font-style:italic;color:var(--label);font-weight:500;background:rgba(201,120,50,.07);padding:0 3px;border-radius:3px;}
+.hl-point{display:block;padding:10px 14px 10px 16px;margin:10px 0 4px;background:rgba(201,120,50,.06);border-left:2px solid var(--tint);border-radius:0 8px 8px 0;color:var(--label);font-weight:500;font-size:14px;}
 .reading-section{padding:28px 24px;border-bottom:1px solid rgba(255,255,255,.5);}
 .reading-section:last-child{border-bottom:none;}
 .reading-section-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tint);margin-bottom:16px;}
@@ -249,7 +254,7 @@ nav{display:flex;background:rgba(255,255,255,.6);backdrop-filter:var(--blur);-we
 .error-block{padding:24px;}
 .error-text{font-size:14px;color:var(--red);line-height:1.7;}
 
-.chat-section{margin-top:1px;background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-radius:0 0 var(--r-lg) var(--r-lg);overflow:hidden;box-shadow:var(--glass-shadow);border:1px solid var(--glass-border-outer);border-top:none;}
+.chat-section{margin-top:24px;background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--glass-shadow);border:1px solid var(--glass-border-outer);}
 .chat-header{padding:16px 22px;border-bottom:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.35);}
 .chat-header-title{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--label);margin-bottom:3px;}
 .chat-header-desc{font-size:13px;color:var(--label-3);}
@@ -373,6 +378,10 @@ nav{display:flex;background:rgba(255,255,255,.6);backdrop-filter:var(--blur);-we
       <div class="step2-header">
         <p class="step2-title" id="step2-label"></p>
         <p class="step2-desc" id="step2-desc"></p>
+        <div class="question-block">
+          <label class="question-label" id="question-label">Ta question <span class="question-optional" id="question-optional">(facultatif)</span></label>
+          <textarea class="question-input" id="question-input" rows="2" placeholder="Ex : Quelle direction prendre dans ma vie professionnelle ?"></textarea>
+        </div>
       </div>
       <button class="btn btn-shuffle" id="btn-shuffle" onclick="shuffleDraw()">Mélanger et tirer les cartes</button>
       <p class="shuffle-note" id="shuffle-note">Ou appuyez sur chaque carte pour sélectionner manuellement selon votre tirage réel.</p>
@@ -470,6 +479,8 @@ var L = {
     analyze: 'Analyser le tirage →',
     shuffle: 'Mélanger et tirer les cartes',
     shuffle_note: 'Ou cliquez sur chaque carte pour sélectionner manuellement selon votre tirage réel.',
+    question_ph: 'Ex : Quelle direction prendre dans ma vie professionnelle ?',
+    question_optional: '(facultatif)',
     back: '← Changer de tirage', new_spread: '← Nouveau tirage',
     pos_label: 'POSITION', click_pick: 'Cliquer pour choisir',
     rev_label: '↑ Renversée', turn_btn: 'Retourner',
@@ -484,8 +495,8 @@ var L = {
     m_kws:'Mots-clés', m_up:"Sens à l'endroit", m_rev:'Sens renversé', m_sym:'Symbolisme', m_dom:'Domaines',
     cards: n => `${n} carte${n>1?'s':''}`,
     revs: n => `${n} renversée${n!==1?'s':''}`,
-    sys: "Tu es un tarologue expert du Tarot do Mēcas. Tu lis les tirages de façon directe, symbolique et concrète. Tu tutoies la personne. Chaque interprétation est ancrée dans la position et le sens de la carte. Pour mettre en valeur les éléments importants, utilise **texte** pour les mots-clés essentiels. Pour les points d'action ou insights majeurs, commence la ligne par → suivi du texte. Structure ta réponse en PARTIE 1 (carte par carte) et PARTIE 2 (synthèse globale).",
-    prompt: (name, desc, lines) => `Tirage : ${name}\nDescription : ${desc}\n\nCartes :\n${lines}\n\nDonne une lecture en deux parties :\n\nPARTIE 1 — CARTE PAR CARTE\nPour chaque carte : son rôle dans sa position précise, en tenant compte du sens. 2-4 phrases. Commence chaque carte par son nom en gras.\n\nPARTIE 2 — LECTURE GLOBALE\nCe que ces cartes racontent ensemble. 4-6 phrases. Conclus sur ce que ce tirage invite à considérer.`,
+    sys: "Tu es un tarologue expert, direct et précis. Tu tutoies. Tes lectures sont concises : pas de remplissage, pas de formules vides. Pour les mots-clés essentiels, utilise _italique_ (underscore). Pour l'insight final ou invitation à l'action, commence par →. Respecte la structure PARTIE 1 / PARTIE 2.",
+    prompt: (name, desc, lines, q) => 'Tirage : '+name+(q?'\nQuestion : '+q:'')+'\n\nCartes :\n'+lines+'\n\nStructure ta réponse ainsi :\n\nPARTIE 1 — CARTE PAR CARTE\nPour chaque carte : 2-3 phrases. Rôle précis dans sa position. Mets en italique (_mot_) les mots-clés essentiels. Commence par le nom de la carte suivi d un tiret.\n\nPARTIE 2 — SYNTHÈSE\n3-4 phrases. Ce que le tirage dit dans son ensemble'+(q?' par rapport à la question posée':'')+'. Termine par une invitation concrète introduite par →',
     spreads: null, // uses default SPREADS
   },
   pt: {
@@ -501,6 +512,8 @@ var L = {
     analyze: 'Analisar a tiragem →',
     shuffle: 'Misturar e tirar as cartas',
     shuffle_note: 'Ou clique em cada carta para selecionar manualmente conforme o seu baralho real.',
+    question_ph: 'Ex : Que caminho seguir na minha vida profissional ?',
+    question_optional: '(facultativo)',
     back: '← Mudar de tiragem', new_spread: '← Nova tiragem',
     pos_label: 'POSIÇÃO', click_pick: 'Clica para escolher',
     rev_label: '↑ Invertida', turn_btn: 'Inverter',
@@ -516,7 +529,7 @@ var L = {
     cards: n => `${n} carta${n>1?'s':''}`,
     revs: n => `${n} invertida${n!==1?'s':''}`,
     sys: "És um especialista em Tarot de Marselha. Lês as tiragens de forma directa, simbólica e concreta. Tratas a pessoa por tu. Cada interpretação está ancorada na posição da carta e no seu sentido.",
-    prompt: (name, desc, lines) => `Tiragem : ${name}\nDescrição : ${desc}\n\nCartas :\n${lines}\n\nDá uma leitura em duas partes :\n\nPARTE 1 — CARTA A CARTA\nPara cada carta: o seu papel na posição exacta, tendo em conta o sentido. 2-4 frases. Começa cada carta com o nome a negrito.\n\nPARTE 2 — LEITURA GLOBAL\nO que estas cartas contam juntas. 4-6 frases. Conclui com o que esta tiragem convida a considerar.`,
+    prompt: (name, desc, lines, q) => 'Tiragem : '+name+(q?'\nQuestão : '+q:'')+'\n\nCartas :\n'+lines+'\n\nEstrutura a tua resposta assim :\n\nPARTE 1 — CARTA A CARTA\n2-3 frases por carta. Papel preciso na posição. Coloca em itálico (_palavra_) as palavras-chave. Começa com o nome da carta seguido de um traço.\n\nPARTE 2 — SÍNTESE\n3-4 frases. O que a tiragem diz no conjunto'+(q?' em relação à questão colocada':'')+'. Termina com um convite concreto introduzido por →',
     spreads: [
       {id:'ppf',name:'Passado · Presente · Futuro',count:3,desc:'A tiragem fundamental. Trajectória temporal de uma situação.',positions:['O Passado — o que levou até aqui','O Presente — a situação actual','O Futuro — o que se perfila'],layout:{type:'grid',cols:3,rows:1,slots:[{c:1,r:1},{c:2,r:1},{c:3,r:1}]}},
       {id:'oui-non',name:'Sim / Não',count:3,desc:'Resposta directa a uma questão binária.',positions:['O que favorece o Sim','A resposta central','O que favorece o Não'],layout:{type:'grid',cols:3,rows:1,slots:[{c:1,r:1},{c:2,r:1},{c:3,r:1}]}},
@@ -554,6 +567,8 @@ function setLang(l) {
   if(s('btn-analyze')) s('btn-analyze').textContent = T.analyze;
   if(s('btn-shuffle')) s('btn-shuffle').textContent = T.shuffle;
   if(s('shuffle-note')) s('shuffle-note').textContent = T.shuffle_note;
+  if(s('question-input')) s('question-input').placeholder = T.question_ph||'';
+  if(s('question-optional')) s('question-optional').textContent = T.question_optional||'';
   const cl = q('#step1 .section-label'); if(cl) cl.textContent = T.choose;
   const ll = q('#screen-arcanes .section-label'); if(ll) ll.textContent = T.lib_title;
   const ch = q('.chat-header-title'); if(ch) ch.textContent = T.deepen_title;
@@ -970,7 +985,8 @@ function buildPrompt(){
     const a=ARCANES[slot.arcanaIndex];
     return `Position ${i+1} (${selectedSpread.positions[i]}) : ${a.name} (Arcane ${a.roman})${slot.reversed?' — RENVERSÉE':''}\nMots-clés : ${a.keywords.join(', ')}\nSens endroit : ${a.upright}\nSens renversé : ${a.reversed}`;
   }).join('\n\n');
-  return t().prompt(selectedSpread.name, selectedSpread.desc, lines);
+  const q=(document.getElementById('question-input')||{}).value||'';
+  return t().prompt(selectedSpread.name, selectedSpread.desc, lines, q.trim());
 }
 
 // ─── RENDER READING ───
