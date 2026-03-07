@@ -367,10 +367,24 @@ function setGroqKey(){
   const st=document.getElementById('groq-status');
   if(v.length<10){st.textContent='Clé trop courte';st.className='api-status err';st.style.display='block';return;}
   groqKey=v;
+  try{localStorage.setItem('groq_key',v);}catch(e){}
   document.getElementById('groq-key-input').value='';
-  st.textContent='✓ Clé enregistrée';
+  st.textContent='✓ Clé enregistrée et mémorisée';
   st.className='api-status ok';st.style.display='block';
-  document.getElementById('api-banner').style.opacity='0.5';
+  document.getElementById('api-banner').style.opacity='0.3';
+}
+
+function loadSavedKey(){
+  try{
+    const saved=localStorage.getItem('groq_key');
+    if(saved&&saved.length>10){
+      groqKey=saved;
+      const st=document.getElementById('groq-status');
+      st.textContent='✓ Clé mémorisée active';
+      st.className='api-status ok';st.style.display='block';
+      document.getElementById('api-banner').style.opacity='0.3';
+    }
+  }catch(e){}
 }
 
 // ─── GROQ CALL ───
@@ -632,6 +646,7 @@ function showScreen(id,btn){
 }
 
 init();
+loadSavedKey();
 </script>
 </body>
 </html>
