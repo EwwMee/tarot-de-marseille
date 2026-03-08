@@ -13,7 +13,7 @@
 
 <body>
 
-<div id="splash" onclick="hideSplash()">
+<div id="splash" onclick="handleSplashClick()">
   <div id="splash-card">
     <div id="splash-card-inner">
       <div id="splash-front">
@@ -35,7 +35,8 @@
   <source src="audio/ambiance.mp3" type="audio/mpeg">
 </audio>
 
-<button id="mute-btn" onclick="toggleMute()" title="Musique">♪</button>
+<button id="theme-btn" onclick="toggleTheme()" title="Thème">☀</button>
+<button id="mute-btn" class="muted" onclick="toggleMute()" title="Musique">♩</button>
 
   <header>
     <div class="site-title" id="site-title">

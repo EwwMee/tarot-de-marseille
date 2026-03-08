@@ -105,6 +105,24 @@ function loadSavedSession() {
     const name = localStorage.getItem('groq_name');
     if (key && key.length > 10 && name) { groqKey = key; activateSession(name); }
   } catch (e) { }
+
+try {
+  const saved = localStorage.getItem('tarot_theme');
+  if(saved === 'dark') {
+    document.body.classList.add('dark');
+    const btn = document.getElementById('theme-btn');
+    if(btn) btn.textContent = '☾';
+  } else if(saved === 'light') {
+    // forcé clair, rien à faire
+  } else {
+    // pas de préférence sauvegardée — suit le système
+    if(window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.body.classList.add('dark');
+      const btn = document.getElementById('theme-btn');
+      if(btn) btn.textContent = '☾';
+    }
+  }
+} catch(e) {}
 }
 
 // ─── GROQ API ───
@@ -557,6 +575,11 @@ function toggleMute() {
   }
 }
 
+function handleSplashClick() {
+  document.getElementById('bg-audio').play().catch(() => {});
+  hideSplash();
+}
+
 function hideSplash() {
   const splash = document.getElementById('splash');
   const card = document.getElementById('splash-card');
@@ -603,7 +626,12 @@ function hideSplash() {
   };
 
   requestAnimationFrame(fall);
+
+  setTimeout(() => {
+  document.getElementById('bg-audio').play().catch(() => {});
+}, 500);
 }
+
 // ─── INIT ───
 setTimeout(hideSplash, 1500);
 function init() {
@@ -612,7 +640,13 @@ function init() {
   loadSavedSession();
 const audio = document.getElementById('bg-audio');
 audio.volume = 0.35;
-document.addEventListener('click', () => audio.play(), { once: true });
+document.addEventListener('click', () => audio.play().catch(() => {}), { once: true });
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+function toggleTheme() {
+  const dark = document.body.classList.toggle('dark');
+  document.getElementById('theme-btn').textContent = dark ? '☾' : '☀';
+  try { localStorage.setItem('tarot_theme', dark ? 'dark' : 'light'); } catch(e) {}
+}

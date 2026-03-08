@@ -6,6 +6,62 @@
 }
 
 :root {
+  #theme-btn {
+  position: fixed;
+  bottom: 68px;
+  right: 20px;
+  z-index: 100;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border-outer);
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  color: var(--tint);
+  font-size: 16px;
+  cursor: pointer;
+  transition: background .18s;
+}
+#theme-btn:hover { background: var(--glass-bg-strong); }
+
+body.dark {
+  --label: rgba(235,225,210,.95);
+  --label-2: rgba(235,225,210,.6);
+  --label-3: rgba(235,225,210,.35);
+  --fill: rgba(255,255,255,.06);
+  --fill-2: rgba(255,255,255,.1);
+  --glass-bg: rgba(20,16,12,.55);
+  --glass-bg-strong: rgba(20,16,12,.75);
+  --glass-border: rgba(201,120,50,.15);
+  --glass-border-outer: rgba(201,120,50,.12);
+  --separator-strong: rgba(201,120,50,.15);
+  background: #12100e;
+}
+body.dark::before {
+  background: #12100e;
+}
+body.dark::after {
+  background: radial-gradient(ellipse at center, rgba(80,40,10,.5) 0%, transparent 70%);
+}
+body.dark .bg-blob2 {
+  background: radial-gradient(ellipse at center, rgba(60,30,8,.4) 0%, transparent 70%);
+}
+body.dark nav {
+  background: rgba(20,16,12,.8);
+  border-bottom-color: rgba(201,120,50,.15);
+}
+body.dark .nav-tab {
+  color: rgba(235,225,210,.35);
+}
+body.dark .nav-tab:hover {
+  background: rgba(255,255,255,.05);
+  color: rgba(235,225,210,.6);
+}
+body.dark .nav-tab.active {
+  color: var(--tint);
+  background: rgba(255,255,255,.06);
+}
   --bg: #f2f2f7;
   --bg2: #ffffff;
   --bg3: #f2f2f7;
@@ -1772,4 +1828,112 @@ nav {
   width: 100%;
   height: 100%;
   pointer-events: none;
+}
+
+body.dark header {
+  background: rgba(20,16,12,.8);
+  border-bottom-color: rgba(201,120,50,.12);
+}
+body.dark .spreads-list,
+body.dark .lib-grid,
+body.dark .reading-result,
+body.dark .chat-section,
+body.dark .api-banner,
+body.dark #session-bar {
+  background: rgba(20,16,12,.55);
+  border-color: rgba(201,120,50,.12);
+}
+body.dark .spread-row,
+body.dark .lib-row {
+  border-bottom-color: rgba(201,120,50,.1);
+}
+body.dark .spread-row:hover,
+body.dark .lib-row:hover {
+  background: rgba(255,255,255,.04);
+}
+body.dark .vcard {
+  background: rgba(20,16,12,.6);
+  border-color: rgba(201,120,50,.2);
+}
+body.dark .vcard.filled {
+  background: rgba(30,20,10,.8);
+}
+body.dark .position-slot,
+body.dark .pos-label-block {
+  background: rgba(20,16,12,.55);
+  border-color: rgba(201,120,50,.12);
+}
+body.dark .pos-card-block:hover {
+  background: rgba(255,255,255,.04);
+}
+body.dark .picker-modal,
+body.dark .modal {
+  background: rgba(18,14,10,.85);
+  border-color: rgba(201,120,50,.15);
+}
+body.dark .picker-cell,
+body.dark .picker-grid {
+  background: rgba(20,16,12,.6);
+}
+body.dark .picker-cell:hover {
+  background: rgba(255,255,255,.06);
+}
+body.dark .picker-header,
+body.dark .picker-footer,
+body.dark .modal-header,
+body.dark .modal-body {
+  background: rgba(20,16,12,.4);
+}
+body.dark .analysis-card {
+  background: rgba(20,16,12,.6);
+}
+body.dark .reading-section {
+  border-bottom-color: rgba(201,120,50,.1);
+}
+body.dark .chat-msg.user {
+  background: rgba(255,255,255,.03);
+}
+body.dark .chat-msg.ai {
+  background: rgba(255,255,255,.06);
+}
+body.dark .chat-input {
+  background: rgba(20,16,12,.7);
+  border-color: rgba(201,120,50,.2);
+  color: var(--label);
+}
+body.dark .chat-input-area,
+body.dark .chat-header {
+  background: rgba(20,16,12,.4);
+}
+body.dark .api-banner input,
+body.dark .api-banner textarea {
+  background: rgba(255,255,255,.06);
+  color: var(--label);
+}
+body.dark .question-input {
+  background: rgba(20,16,12,.6);
+  border-color: rgba(201,120,50,.2);
+  color: var(--label);
+}
+body.dark .btn-shuffle {
+  background: rgba(20,16,12,.6);
+  border-color: rgba(201,120,50,.2);
+  color: var(--label);
+}
+body.dark .modal-rev-block {
+  background: rgba(214,48,49,.08);
+}
+body.dark #mute-btn,
+body.dark #theme-btn {
+  background: rgba(20,16,12,.6);
+  border-color: rgba(201,120,50,.2);
+}
+body.dark #splash {
+  background: #12100e;
+}
+body.dark #splash-front {
+  background: rgba(20,16,12,.8);
+}
+body.dark #splash-back {
+  background: rgba(20,16,12,.9);
 }
