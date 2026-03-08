@@ -807,7 +807,7 @@ function buildDailyCard() {
 function showTuto() {
   const steps = [
     { icon: '✦', title: 'Carte du jour', desc: 'Chaque jour une carte t\'attend. Révèle-la pour recevoir un message personnalisé.' },
-    { icon: '🔑', title: 'Clé API', desc: 'Entre ton prénom et ta clé Groq pour activer l\'IA. Gratuite sur console.groq.com.' },
+    { icon: '🔑', title: 'Clé API', desc: 'Entre ton prénom et ta clé API pour activer l\'IA.' },
     { icon: '🃏', title: 'Choisir un tirage', desc: 'Sélectionne un tirage selon ta question. De 3 à 7 cartes selon la profondeur souhaitée.' },
     { icon: '✦', title: 'Lire les arcanes', desc: 'Consulte les 22 Arcanes Majeurs dans l\'onglet Arcanes pour approfondir ta connaissance.' },
   ];
