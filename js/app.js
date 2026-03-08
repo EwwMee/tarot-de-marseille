@@ -809,7 +809,7 @@ function showTuto() {
     { icon: '✦', title: 'Carte du jour', desc: 'Chaque jour une carte t\'attend. Révèle-la pour recevoir un message personnalisé.' },
     { icon: '🔑', title: 'Clé API', desc: 'Entre ton prénom et ta clé API pour activer l\'IA.' },
     { icon: '🃏', title: 'Choisir un tirage', desc: 'Sélectionne un tirage selon ta question. De 3 à 7 cartes selon la profondeur souhaitée.' },
-    { icon: '✦', title: 'Lire les arcanes', desc: 'Consulte les 22 Arcanes Majeurs dans l\'onglet Arcanes pour approfondir ta connaissance.' },
+    { icon: '<svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;color:var(--tint);"><circle cx="22" cy="10" r="4"/><path d="M22 14v14"/><path d="M14 20l8 4 8-4"/><path d="M18 36l4-8 4 8"/><path d="M8 30c4-2 8 2 14-2s10 0 14-2"/></svg>', title: 'Lire les arcanes', desc: 'Consulte les 22 Arcanes Majeurs dans l\'onglet Arcanes pour approfondir ta connaissance.' },
   ];
 
   let current = 0;
@@ -838,7 +838,7 @@ function showTuto() {
         padding:36px 28px 28px;
         text-align:center;
       ">
-        <div style="font-size:32px;margin-bottom:16px;">${s.icon}</div>
+        <div style="width:48px;height:48px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:32px;">${s.icon}</div>
         <div style="font-size:17px;font-weight:700;color:var(--label);margin-bottom:10px;letter-spacing:.2px;">${s.title}</div>
         <div style="font-size:14px;color:var(--label-2);line-height:1.7;margin-bottom:28px;">${s.desc}</div>
         <div style="display:flex;gap:6px;justify-content:center;margin-bottom:24px;">
