@@ -567,10 +567,12 @@ function toggleMute() {
   if (audio.muted) {
     audio.muted = false;
     btn.classList.remove('muted');
+    btn.classList.add('playing');
     btn.textContent = '♪';
   } else {
     audio.muted = true;
     btn.classList.add('muted');
+    btn.classList.remove('playing');
     btn.textContent = '♩';
   }
 }
