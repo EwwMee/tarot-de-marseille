@@ -77,6 +77,9 @@ function startSession() {
   groqKey = key;
   try { localStorage.setItem('groq_key', key); localStorage.setItem('groq_name', name); } catch (e) { }
   activateSession(name);
+  if(document.getElementById('daily-text')) {
+  loadDailyReading();
+}
 }
 
 function activateSession(name) {
@@ -639,12 +642,19 @@ function hideSplash() {
 // ─── INIT ───
 setTimeout(hideSplash, 1500);
 function init() {
-  buildSpreads();
   buildLibrary();
   loadSavedSession();
+  buildSpreadsWithDaily();
 const audio = document.getElementById('bg-audio');
 audio.volume = 0.35;
 document.addEventListener('click', () => audio.play().catch(() => {}), { once: true });
+setInterval(() => {
+  const today = new Date().toISOString().split('T')[0];
+  try {
+    const saved = JSON.parse(localStorage.getItem('daily_card') || '{}');
+    if(saved.date !== today) buildSpreadsWithDaily();
+  } catch(e) {}
+}, 60000);
 }
 
 document.addEventListener('DOMContentLoaded', init);
@@ -653,4 +663,140 @@ function toggleTheme() {
   const dark = document.body.classList.toggle('dark');
   document.getElementById('theme-btn').textContent = dark ? '☾' : '☀';
   try { localStorage.setItem('tarot_theme', dark ? 'dark' : 'light'); } catch(e) {}
+}
+
+function getDailyCard() {
+  const today = new Date().toISOString().split('T')[0];
+  try {
+    const saved = JSON.parse(localStorage.getItem('daily_card') || '{}');
+    if(saved.date === today) return saved;
+    const index = Math.floor(Math.random() * 22);
+    const reversed = Math.random() < 0.3;
+    const entry = { date: today, index, reversed, unlocked: false };
+    localStorage.setItem('daily_card', JSON.stringify(entry));
+    return entry;
+  } catch(e) {
+    return { date: today, index: Math.floor(Math.random() * 22), reversed: false, unlocked: false };
+  }
+}
+
+function unlockDailyCard() {
+  const today = new Date().toISOString().split('T')[0];
+  try {
+    const saved = JSON.parse(localStorage.getItem('daily_card') || '{}');
+    if(saved.date === today) {
+      saved.unlocked = true;
+      localStorage.setItem('daily_card', JSON.stringify(saved));
+    }
+  } catch(e) {}
+  buildSpreadsWithDaily();
+}
+
+function resetDailyCard() {
+  try { localStorage.removeItem('daily_card'); } catch(e) {}
+  buildSpreadsWithDaily();
+}
+
+async function loadDailyReading() {
+  if(!groqKey) return;
+  const daily = getDailyCard();
+  const a = ARCANES[daily.index];
+  const prompt = `Carte du jour : ${a.name} (Arcane ${a.roman})${daily.reversed?' — RENVERSÉE':''}.
+Mots-clés : ${a.keywords.join(', ')}.
+En 2-3 phrases courtes et directes, dis ce que cette carte signifie pour aujourd'hui. Pas de titre, pas de "PARTIE", pas de structure. Juste le texte brut.`;
+
+  try {
+    const today = new Date().toISOString().split('T')[0];
+const savedRaw = localStorage.getItem('daily_reading_' + today);
+const savedIndex = localStorage.getItem('daily_reading_index_' + today);
+const savedReading = savedRaw && parseInt(savedIndex) === daily.index ? savedRaw : null;
+
+if(savedReading) {
+      const el = document.getElementById('daily-text');
+      if(el) {
+        const parts = savedReading.split('→');
+        let html = fmt(parts[0].trim());
+        if(parts[1]) html += `<span class="hl-point">→ ${parts[1].trim()}</span>`;
+        el.innerHTML = html;
+      }
+      return;
+    }
+
+    const raw = await callGroq([
+      { role: 'system', content: t().sys },
+      { role: 'user', content: prompt }
+    ]);
+    localStorage.setItem('daily_reading_index_' + today, daily.index);
+    const el = document.getElementById('daily-text');
+    if(el) {
+      const parts = raw.split('→');
+      let html = fmt(parts[0].trim());
+      if(parts[1]) html += `<span class="hl-point">→ ${parts[1].trim()}</span>`;
+      el.innerHTML = html;
+    }
+  } catch(e) {
+    const el = document.getElementById('daily-text');
+    if(el) el.textContent = '—';
+  }
+}
+
+function buildSpreadsWithDaily() {
+  const container = document.getElementById('step1');
+  const existing = document.getElementById('daily-block');
+  if(existing) existing.remove();
+  container.insertAdjacentHTML('afterbegin', buildDailyCard());
+  loadDailyReading();
+}
+
+function buildDailyCard() {
+  const daily = getDailyCard();
+  const a = ARCANES[daily.index];
+  const now = new Date();
+  const midnight = new Date(); midnight.setHours(24,0,0,0);
+  const diff = midnight - now;
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+
+  if(!daily.unlocked) {
+    return `
+      <div id="daily-block" style="margin-bottom:24px;">
+        <p class="section-label">Carte du jour</p>
+        <div onclick="unlockDailyCard()" class="daily-locked">
+          <div style="
+            width:56px;height:56px;border-radius:50%;
+            background:var(--tint-bg);
+            border:1.5px solid var(--tint);
+            display:flex;align-items:center;justify-content:center;
+            font-size:22px;
+          ">✦</div>
+          <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tint);">Révéler la carte du jour</div>
+          <div style="font-size:12px;color:var(--label-3);text-align:center;line-height:1.6;">Votre carte quotidienne vous attend.<br>Elle changera dans ${h}h ${m}m.</div>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div id="daily-block" style="margin-bottom:24px;">
+      <p class="section-label">Carte du jour</p>
+      <div style="background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--glass-shadow);border:1px solid var(--glass-border-outer);">
+        <div style="padding:20px 22px;display:flex;align-items:center;gap:20px;">
+          <div style="width:64px;height:64px;flex-shrink:0;color:${daily.reversed?'var(--red)':'var(--tint)'};">${ARCANA_SVG[daily.index]}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--label-3);margin-bottom:4px;">Arcane ${a.roman}${daily.reversed?' · <span style="color:var(--red)">Renversée</span>':''}</div>
+            <div style="font-size:18px;font-weight:500;color:var(--label);margin-bottom:8px;">${a.name}</div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;">${a.keywords.map(k=>`<span style="font-size:11px;font-weight:500;color:var(--label-2);background:var(--fill);padding:3px 10px;border-radius:20px;">${k}</span>`).join('')}</div>
+          </div>
+        </div>
+        <div id="daily-reading" style="padding:0 22px 20px;font-size:14px;color:var(--label-2);line-height:1.7;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--label-3);margin-bottom:8px;">Lecture du jour</div>
+          <div id="daily-text"><span style="color:var(--label-3);animation:pulse 2s infinite;display:inline-block;">· · ·</span></div>
+        </div>
+        <div style="padding:12px 22px;border-top:1px solid var(--glass-border-outer);display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:11px;color:var(--label-3);">Nouvelle carte dans ${h}h ${m}m</span>
+          <span style="font-size:11px;font-weight:600;color:var(--tint);cursor:pointer;" onclick="openModal(${daily.index})">Voir l'arcane →</span>
+        </div>
+      </div>
+    </div>
+  `;
 }

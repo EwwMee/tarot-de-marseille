@@ -1996,3 +1996,50 @@ body.dark #splash-back {
   70%  { border-radius: 54% 46% 48% 52% / 52% 54% 46% 48%; transform: scale(0.99); box-shadow: 0 0 0 4px rgba(201,120,50,.05), 0 0 0 8px rgba(201,120,50,.02); }
   100% { border-radius: 50%; transform: scale(1); box-shadow: none; }
 }
+
+.daily-locked {
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--glass-border-outer);
+  box-shadow: var(--glass-shadow);
+  padding: 32px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: background .2s;
+  position: relative;
+  overflow: hidden;
+}
+.daily-locked::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 5%,
+    rgba(201,120,50,.08) 65%,
+    rgba(255,255,255,.22) 75%,
+    rgba(180,220,255,.1) 85%,
+    transparent 100%
+  );
+  background-size: 200% 200%;
+  animation: holoBtnShift 6s ease-in-out infinite;
+}
+.daily-locked:hover::before {
+  animation: holoBtnShift 2s ease-in-out infinite;
+}
+body.dark .daily-locked::before {
+  background: linear-gradient(
+    105deg,
+    transparent 5%,
+    rgba(255,255,255,.03) 65%,
+    rgba(255,255,255,.07) 75%,
+    rgba(255,255,255,.03) 85%,
+    transparent 100%
+  );
+  background-size: 200% 200%;
+}
