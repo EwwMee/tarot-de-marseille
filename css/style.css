@@ -359,7 +359,7 @@ nav {
   letter-spacing: 1px;
   text-transform: uppercase;
   padding: 14px 28px;
-  border-radius: var(--r);
+  border-radius: 100px;
   cursor: pointer;
   transition: opacity .15s, transform .1s;
   width: 100%;
@@ -1493,7 +1493,7 @@ body.dark .btn-shuffle::before {
   letter-spacing: 1px;
   text-transform: uppercase;
   padding: 12px 18px;
-  border-radius: var(--r-sm);
+  border-radius: 100px;
   cursor: pointer;
   transition: opacity .15s;
   white-space: nowrap;
