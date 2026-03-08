@@ -655,6 +655,9 @@ setInterval(() => {
     if(saved.date !== today) buildSpreadsWithDaily();
   } catch(e) {}
 }, 60000);
+try {
+  if(!localStorage.getItem('tuto_done')) setTimeout(showTuto, 2000);
+} catch(e) {}
 }
 
 document.addEventListener('DOMContentLoaded', init);
@@ -799,4 +802,68 @@ function buildDailyCard() {
       </div>
     </div>
   `;
+}
+
+function showTuto() {
+  const steps = [
+    { icon: '✦', title: 'Carte du jour', desc: 'Chaque jour une carte t\'attend. Révèle-la pour recevoir un message personnalisé.' },
+    { icon: '🔑', title: 'Clé API', desc: 'Entre ton prénom et ta clé Groq pour activer l\'IA. Gratuite sur console.groq.com.' },
+    { icon: '🃏', title: 'Choisir un tirage', desc: 'Sélectionne un tirage selon ta question. De 3 à 7 cartes selon la profondeur souhaitée.' },
+    { icon: '✦', title: 'Lire les arcanes', desc: 'Consulte les 22 Arcanes Majeurs dans l\'onglet Arcanes pour approfondir ta connaissance.' },
+  ];
+
+  let current = 0;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'tuto-overlay';
+  overlay.style.cssText = `
+    position:fixed;inset:0;z-index:2000;
+    background:rgba(200,200,210,.25);
+    backdrop-filter:blur(24px) saturate(180%);
+    -webkit-backdrop-filter:blur(24px) saturate(180%);
+    display:flex;align-items:center;justify-content:center;padding:16px;
+  `;
+
+  const render = () => {
+    const s = steps[current];
+    overlay.innerHTML = `
+      <div style="
+        background:var(--glass-bg-strong);
+        backdrop-filter:var(--blur);
+        -webkit-backdrop-filter:var(--blur);
+        border-radius:var(--r-lg);
+        border:1px solid var(--glass-border-outer);
+        box-shadow:var(--glass-shadow-md);
+        max-width:380px;width:100%;
+        padding:36px 28px 28px;
+        text-align:center;
+      ">
+        <div style="font-size:32px;margin-bottom:16px;">${s.icon}</div>
+        <div style="font-size:17px;font-weight:700;color:var(--label);margin-bottom:10px;letter-spacing:.2px;">${s.title}</div>
+        <div style="font-size:14px;color:var(--label-2);line-height:1.7;margin-bottom:28px;">${s.desc}</div>
+        <div style="display:flex;gap:6px;justify-content:center;margin-bottom:24px;">
+          ${steps.map((_,i) => `<div style="width:6px;height:6px;border-radius:50%;background:${i===current?'var(--tint)':'var(--fill-2)'};transition:background .2s;"></div>`).join('')}
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button onclick="document.getElementById('tuto-overlay').remove();try{localStorage.setItem('tuto_done','1')}catch(e){}" style="
+            flex:1;background:var(--fill);border:none;color:var(--label-2);
+            font-family:var(--font);font-size:12px;font-weight:600;letter-spacing:.5px;
+            padding:12px;border-radius:100px;cursor:pointer;
+          ">Passer</button>
+          <button id="tuto-next" style="
+            flex:2;background:var(--tint);border:none;color:#fff;
+            font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:1px;
+            text-transform:uppercase;padding:12px;border-radius:100px;cursor:pointer;
+          ">${current < steps.length-1 ? 'Suivant →' : 'Commencer'}</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('tuto-next').onclick = () => {
+      if(current < steps.length-1) { current++; render(); }
+      else { overlay.remove(); try{localStorage.setItem('tuto_done','1')}catch(e){} }
+    };
+  };
+
+  document.body.appendChild(overlay);
+render();
 }
