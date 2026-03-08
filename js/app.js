@@ -604,6 +604,7 @@ function hideSplash() {
       y = -12 * curve;
       rot = -3 * curve;
       opacity = 1;
+      card.style.filter = `blur(${curve * 1}px)`;
     } else {
       // Phase chute : part lentement de l'apex, accélère comme gravité
       const t2 = (t - 0.4) / 0.6;
@@ -611,6 +612,7 @@ function hideSplash() {
       y = -12 + (12 + 140) * gravity;
       rot = -3 + t2 * 32;
       opacity = t2 < 0.35 ? 1 : 1 - Math.pow((t2 - 0.35) / 0.65, 1.2);
+      card.style.filter = `blur(${gravity * 140}px)`;
     }
 
     card.style.transform = `translateY(${y}vh) rotate(${rot}deg) rotateY(${t < 0.4 ? 0 : ((t - 0.4) / 0.6) * 300}deg)`;
