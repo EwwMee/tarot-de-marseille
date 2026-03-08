@@ -400,21 +400,70 @@ nav {
 }
 
 .btn-shuffle {
-  background: rgba(255, 255, 255, .6);
+  background: rgba(255,255,255,.6);
   backdrop-filter: var(--blur-sm);
   -webkit-backdrop-filter: var(--blur-sm);
   color: var(--label);
-  border: 1.5px solid rgba(255, 255, 255, .9);
+  border: 1.5px solid rgba(255,255,255,.9);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: .5px;
+  position: relative;
+  overflow: hidden;
 }
-
 .btn-shuffle:hover {
-  background: rgba(255, 255, 255, .8);
+  background: rgba(255,255,255,.8);
   opacity: 1;
 }
-
+.btn-shuffle {
+  background: rgba(255,255,255,.6);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  color: var(--label);
+  border: 1.5px solid rgba(255,255,255,.9);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  position: relative;
+  overflow: hidden;
+}
+.btn-shuffle:hover {
+  background: rgba(255,255,255,.8);
+  opacity: 1;
+}
+.btn-shuffle::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 5%,
+    rgba(201,120,50,.08) 65%,
+    rgba(255,255,255,.22) 75%,
+    rgba(180,220,255,.1) 85%,
+    transparent 100%
+  );
+  background-size: 200% 200%;
+  animation: holoBtnShift 6s ease-in-out infinite;
+}
+.btn-shuffle:hover::before {
+  animation: holoBtnShift 2s ease-in-out infinite;
+}
+body.dark .btn-shuffle::before {
+  background: linear-gradient(
+    105deg,
+    transparent 5%,
+    rgba(255,255,255,.03) 65%,
+    rgba(255,255,255,.07) 75%,
+    rgba(255,255,255,.03) 85%,
+    transparent 100%
+  );
+  background-size: 200% 200%;
+}
+@keyframes holoBtnShift {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 /* ── SESSION / API BANNER ── */
 .api-banner {
   background: var(--glass-bg-strong);
