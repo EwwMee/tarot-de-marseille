@@ -543,11 +543,76 @@ function showScreen(id, btn) {
   btn.classList.add('active');
 }
 
+function toggleMute() {
+  const audio = document.getElementById('bg-audio');
+  const btn = document.getElementById('mute-btn');
+  if (audio.muted) {
+    audio.muted = false;
+    btn.classList.remove('muted');
+    btn.textContent = '♪';
+  } else {
+    audio.muted = true;
+    btn.classList.add('muted');
+    btn.textContent = '♩';
+  }
+}
+
+function hideSplash() {
+  const splash = document.getElementById('splash');
+  const card = document.getElementById('splash-card');
+
+  const startTime = performance.now();
+  const duration = 550;
+
+  // Courbe bezier custom pour y : 0 → -12vh (saut) → 140vh (chute)
+  // t 0→0.25 : monte doucement puis accélère vers le haut
+  // t 0.25→0.4 : ralentit en haut (apex)
+  // t 0.4→1 : tombe, lent au début puis accélère fortement
+
+  const fall = (now) => {
+    const t = Math.min((now - startTime) / duration, 1);
+
+    let y, rot, opacity;
+
+    if(t < 0.4) {
+      // Phase montée : ease-in-out vers l'apex
+      const t2 = t / 0.4;
+      const curve = t2 * t2 * (3 - 2 * t2); // smoothstep — lent→rapide→lent
+      y = -12 * curve;
+      rot = -3 * curve;
+      opacity = 1;
+    } else {
+      // Phase chute : part lentement de l'apex, accélère comme gravité
+      const t2 = (t - 0.4) / 0.6;
+      const gravity = Math.pow(t2, 2.2); // lent au début, très rapide à la fin
+      y = -12 + (12 + 140) * gravity;
+      rot = -3 + t2 * 32;
+      opacity = t2 < 0.35 ? 1 : 1 - Math.pow((t2 - 0.35) / 0.65, 1.2);
+    }
+
+    card.style.transform = `translateY(${y}vh) rotate(${rot}deg) rotateY(${t < 0.4 ? 0 : ((t - 0.4) / 0.6) * 300}deg)`;
+    card.style.opacity = Math.max(0, opacity);
+
+    if(t < 1) {
+      requestAnimationFrame(fall);
+    } else {
+      splash.style.transition = 'opacity .3s ease';
+      splash.style.opacity = '0';
+      setTimeout(() => splash.remove(), 300);
+    }
+  };
+
+  requestAnimationFrame(fall);
+}
 // ─── INIT ───
+setTimeout(hideSplash, 1500);
 function init() {
   buildSpreads();
   buildLibrary();
   loadSavedSession();
+const audio = document.getElementById('bg-audio');
+audio.volume = 0.35;
+document.addEventListener('click', () => audio.play(), { once: true });
 }
 
 document.addEventListener('DOMContentLoaded', init);

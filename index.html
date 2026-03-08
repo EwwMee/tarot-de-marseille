@@ -13,10 +13,32 @@
 
 <body>
 
+<div id="splash" onclick="hideSplash()">
+  <div id="splash-card">
+    <div id="splash-card-inner">
+      <div id="splash-front">
+        <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="22" cy="10" r="4"/><path d="M22 14v14"/><path d="M14 20l8 4 8-4"/><path d="M18 36l4-8 4 8"/><path d="M8 30c4-2 8 2 14-2s10 0 14-2"/></svg>
+      </div>
+      <div id="splash-back">
+        <span>TAROT</span>
+        <span id="splash-back-de">do</span>
+        <span>MĒCAS</span>
+      </div>
+    </div>
+  </div>
+  <canvas id="splash-canvas"></canvas>
+</div>
+
   <div class="bg-blob2"></div>
 
+  <audio id="bg-audio" loop muted>
+  <source src="audio/ambiance.mp3" type="audio/mpeg">
+</audio>
+
+<button id="mute-btn" onclick="toggleMute()" title="Musique">♪</button>
+
   <header>
-    <div class="site-title">
+    <div class="site-title" id="site-title">
       <span class="site-title-top">Tarot</span>
       <span class="site-title-de">do</span>
       <span class="site-title-bottom">Mēcas</span>

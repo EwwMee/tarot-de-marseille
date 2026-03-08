@@ -131,8 +131,8 @@ const L = {
     m_kws: 'Mots-clés', m_up: "Sens à l'endroit", m_rev: 'Sens renversé', m_sym: 'Symbolisme', m_dom: 'Domaines',
     cards: n => `${n} carte${n > 1 ? 's' : ''}`,
     revs: n => `${n} renversée${n !== 1 ? 's' : ''}`,
-    sys: "Tu es un tarologue expert, direct et précis. Tu tutoies. Tes lectures sont concises : pas de remplissage, pas de formules vides. Pour les mots-clés essentiels. Pour l'insight final ou invitation à l'action, commence par →. Respecte la structure PARTIE 1 / PARTIE 2.",
-    prompt: (name, desc, lines, q) => 'Tirage : ' + name + (q ? '\nQuestion : ' + q : '') + '\n\nCartes :\n' + lines + '\n\nStructure ta réponse ainsi :\n\nPARTIE 1 — CARTE PAR CARTE\nPour chaque carte : 2-3 phrases. Rôle précis dans sa position. Commence par le Nom de la carte suivi d un tiret.\n\nPARTIE 2 — SYNTHÈSE\n3-4 phrases. Ce que le tirage dit dans son ensemble' + (q ? ' par rapport à la question posée' : '') + '. Termine par une invitation concrète introduite par →',
+    sys: "Tu es un tarologue expert, direct et précis. Tu tutoies. Tes lectures sont concises : pas de remplissage, pas de formules vides. Pour les mots-clés essentiels mets les en valeurs en y ajoutant de la couleur <span style=\"color:#c97832;\">c97832</span>. Pour l'insight final ou invitation à l'action, commence par →. Respecte la structure PARTIE 1 / PARTIE 2.",
+    prompt: (name, desc, lines, q) => 'Tirage : ' + name + (q ? '\nQuestion : ' + q : '') + '\n\nCartes :\n' + lines + '\n\nStructure ta réponse ainsi :\n\nPARTIE 1 — CARTE PAR CARTE\nPour chaque carte : 2-3 phrases. Rôle précis dans sa position. Commence par le Nom de la carte écrit en gras suivi d un tiret.\n\nPARTIE 2 — SYNTHÈSE\n3-4 phrases. Ce que le tirage dit dans son ensemble' + (q ? ' par rapport à la question posée' : '') + '. Termine par une invitation concrète introduite par →',
     spreads: SPREADS_FR,
   },
   pt: {
