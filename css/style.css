@@ -6,62 +6,6 @@
 }
 
 :root {
-  #theme-btn {
-  position: fixed;
-  bottom: 68px;
-  right: 20px;
-  z-index: 100;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid var(--glass-border-outer);
-  background: var(--glass-bg);
-  backdrop-filter: var(--blur-sm);
-  -webkit-backdrop-filter: var(--blur-sm);
-  color: var(--tint);
-  font-size: 16px;
-  cursor: pointer;
-  transition: background .18s;
-}
-#theme-btn:hover { background: var(--glass-bg-strong); }
-
-body.dark {
-  --label: rgba(235,225,210,.95);
-  --label-2: rgba(235,225,210,.6);
-  --label-3: rgba(235,225,210,.35);
-  --fill: rgba(255,255,255,.06);
-  --fill-2: rgba(255,255,255,.1);
-  --glass-bg: rgba(20,16,12,.55);
-  --glass-bg-strong: rgba(20,16,12,.75);
-  --glass-border: rgba(201,120,50,.15);
-  --glass-border-outer: rgba(201,120,50,.12);
-  --separator-strong: rgba(201,120,50,.15);
-  background: #12100e;
-}
-body.dark::before {
-  background: #12100e;
-}
-body.dark::after {
-  background: radial-gradient(ellipse at center, rgba(80,40,10,.5) 0%, transparent 70%);
-}
-body.dark .bg-blob2 {
-  background: radial-gradient(ellipse at center, rgba(60,30,8,.4) 0%, transparent 70%);
-}
-body.dark nav {
-  background: rgba(20,16,12,.8);
-  border-top-color: rgba(201,120,50,.15);
-}
-body.dark .nav-tab {
-  color: rgba(235,225,210,.35);
-}
-body.dark .nav-tab:hover {
-  background: rgba(255,255,255,.05);
-  color: rgba(235,225,210,.6);
-}
-body.dark .nav-tab.active {
-  color: var(--tint);
-  background: rgba(255,255,255,.06);
-}
   --bg: #f2f2f7;
   --bg2: #ffffff;
   --bg3: #f2f2f7;
@@ -83,7 +27,6 @@ body.dark .nav-tab.active {
   --r-lg: 16px;
   --shadow: 0 1px 3px rgba(0, 0, 0, .07), 0 1px 2px rgba(0, 0, 0, .05);
   --shadow-md: 0 4px 20px rgba(0, 0, 0, .08), 0 1px 4px rgba(0, 0, 0, .04);
-
   --glass-bg: rgba(255, 255, 255, .55);
   --glass-bg-strong: rgba(255, 255, 255, .72);
   --glass-border: rgba(255, 255, 255, .9);
@@ -94,6 +37,25 @@ body.dark .nav-tab.active {
   --blur-sm: blur(16px) saturate(160%);
   --font: 'Montserrat', sans-serif;
 }
+
+#theme-btn {
+  position: fixed;
+  bottom: 68px;
+  right: 20px;
+  z-index: 100;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border-outer);
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  color: var(--tint);
+  font-size: 16px;
+  cursor: pointer;
+  transition: background .18s;
+}
+#theme-btn:hover { background: var(--glass-bg-strong); }
 
 body {
   background: #e8f0f8;
@@ -2355,46 +2317,29 @@ header { margin-left: 72px; }
 /* ── BOTTOM NAV (mobile < 768px) ── */
 @media (max-width: 767px) {
   nav {
-    top: auto;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: calc(60px + env(safe-area-inset-bottom));
-    flex-direction: row;
-    padding: 0 0 env(safe-area-inset-bottom);
-    border-right: none;
-    border-top: 1px solid var(--glass-border-outer);
+    top: auto; left: 0; right: 0; bottom: 0;
+    width: 100%; height: calc(60px + env(safe-area-inset-bottom));
+    flex-direction: row; padding: 0 0 env(safe-area-inset-bottom);
+    border-right: none; border-top: 1px solid var(--glass-border-outer);
   }
-
-  .nav-tab {
-    flex: 1;
-    width: auto;
-    height: 60px;
-    border-radius: 0;
-    padding: 6px 4px 4px;
-  }
-
+  .nav-tab { flex: 1; width: auto; height: 60px; border-radius: 0; padding: 6px 4px 4px; }
   .nav-label { font-size: 8px; }
   header { margin-left: 0; }
   .screen { margin-left: 0; }
   .container { padding: 24px 14px calc(80px + env(safe-area-inset-bottom)); }
 
-  /* Boutons fixes au-dessus de la nav + safe area */
-  #mute-btn  { bottom: calc(20px + 60px + env(safe-area-inset-bottom)); }
-  #theme-btn { bottom: calc(68px + 60px + env(safe-area-inset-bottom)); }
+  #mute-btn  { bottom: calc(20px  + 60px + env(safe-area-inset-bottom)); }
+  #theme-btn { bottom: calc(68px  + 60px + env(safe-area-inset-bottom)); }
   #lang-btn  { bottom: calc(116px + 60px + env(safe-area-inset-bottom)); }
   #lang-menu { bottom: calc(164px + 60px + env(safe-area-inset-bottom)); }
 
- .nav-tab.active { background: none !important; }
-
+  .nav-tab.active { background: none !important; }
   .nav-tab.active::after {
     content: '';
     position: absolute;
     top: 7px;
-    right: calc(50% - 15px);  /* collé en haut à droite de l'icône centrée */
-    width: 5px;
-    height: 5px;
+    right: calc(50% - 15px);
+    width: 5px; height: 5px;
     border-radius: 50%;
     background: var(--tint);
   }
