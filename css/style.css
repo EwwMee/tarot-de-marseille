@@ -2199,6 +2199,21 @@ header {
 #mute-btn {
   bottom: calc(20px + 60px + env(safe-area-inset-bottom));
 }
+
+.nav-tab.active {
+  background: none;
+}
+
+.nav-tab.active::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--tint);
+}
 }
 
 /* ── DARK MODE NAV ── */
