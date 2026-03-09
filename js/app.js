@@ -55,10 +55,8 @@ function setLang(l) {
   try { localStorage.setItem('tarot_lang', l); } catch (e) {}
 
   // Nav lang buttons
-  const fr = $('btn-lang-fr'); if (fr) { fr.classList.toggle('active', l === 'fr'); }
-  const pt = $('btn-lang-pt'); if (pt) { pt.classList.toggle('active', l === 'pt'); }
-  const pfr = $('pref-lang-fr'); if (pfr) { pfr.classList.toggle('active', l === 'fr'); }
-  const ppt = $('pref-lang-pt'); if (ppt) { ppt.classList.toggle('active', l === 'pt'); }
+  ['btn-lang-fr','pref-lang-fr'].forEach(id => { const el=$(id); if(el) el.classList.toggle('active', l==='fr'); });
+  ['btn-lang-pt','pref-lang-pt'].forEach(id => { const el=$(id); if(el) el.classList.toggle('active', l==='pt'); });
 
   const T = t();
 
@@ -792,6 +790,29 @@ En 2-3 phrases courtes et directes, dis ce que cette carte signifie pour aujourd
 
 // ─── BUILD DAILY CARD (accueil) ───
 function buildSpreadsWithDaily() {
+  const bannerAccueil = $('session-banner-accueil');
+if (bannerAccueil) {
+  if (!groqKey) {
+    bannerAccueil.innerHTML = `
+      <div class="api-banner" style="margin-bottom:24px;">
+        <div class="api-banner-title">Nouvelle session</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <input id="user-name-input-acc" type="text" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Ton prénom" style="display:block;width:100%;background:var(--fill);border:none;border-radius:var(--r-sm);color:var(--label);font-family:var(--font);font-size:15px;padding:13px 14px;outline:none;caret-color:var(--tint);">
+          <textarea id="groq-key-input-acc" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Clé Groq — gsk_…" style="font-family:monospace;font-size:12px;height:56px;resize:none;word-break:break-all;display:block;width:100%;background:var(--fill);border:none;border-radius:var(--r-sm);color:var(--label);padding:13px 14px;outline:none;caret-color:var(--tint);"></textarea>
+          <button class="api-btn" onclick="startSessionFromAccueil()">Commencer la session →</button>
+        </div>
+        <div class="api-note">Clé gratuite sur <a href="https://console.groq.com/keys" target="_blank">console.groq.com</a> · Stockée localement.</div>
+        <div id="groq-status-acc" class="api-status" style="display:none;"></div>
+      </div>`;
+  } else {
+  const name = localStorage.getItem('groq_name') || '';
+  bannerAccueil.innerHTML = `
+    <div style="padding:4px 2px 20px;display:flex;align-items:center;gap:10px;">
+      <div style="font-size:20px;color:var(--tint);">✦</div>
+      <div style="font-size:20px;font-weight:600;color:var(--label);">Bonjour, ${name}</div>
+    </div>`;
+}
+}
   const container = $('daily-block-accueil');
   if (!container) return;
 
@@ -926,11 +947,11 @@ async function quickShuffleAndAnalyze() {
 // ─── TUTO ───
 function showTuto() {
   const steps = [
-    { icon: '✦', title: 'Carte du jour', desc: 'Chaque jour une carte t\'attend. Révèle-la pour recevoir un message personnalisé.' },
-    { icon: '🔑', title: 'Clé API', desc: 'Entre ton prénom et ta clé API pour activer l\'IA.' },
-    { icon: '🃏', title: 'Choisir un tirage', desc: 'Sélectionne un tirage selon ta question. De 3 à 7 cartes selon la profondeur souhaitée.' },
-    { icon: '<svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:40px;height:40px;color:var(--tint);"><circle cx="22" cy="10" r="4"/><path d="M22 14v14"/><path d="M14 20l8 4 8-4"/><path d="M18 36l4-8 4 8"/><path d="M8 30c4-2 8 2 14-2s10 0 14-2"/></svg>', title: 'Lire les arcanes', desc: 'Consulte les 22 Arcanes Majeurs dans l\'onglet Arcanes pour approfondir ta connaissance.' },
-  ];
+  { icon: '<div style="width:56px;height:56px;border-radius:14px;background:var(--tint-bg);border:1px solid rgba(201,120,50,.2);display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;color:var(--tint);"><path d="M6 20L22 6l16 14"/><path d="M10 16v20h9v-10h6v10h9V16"/></svg></div>', title: 'Accueil', desc: 'Ta carte du jour t\'attend chaque matin. Tire aussi 3 cartes en un clic.' },
+  { icon: '<div style="width:56px;height:56px;border-radius:14px;background:var(--tint-bg);border:1px solid rgba(201,120,50,.2);display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;color:var(--tint);"><rect x="8" y="6" width="20" height="30" rx="3"/><rect x="16" y="10" width="20" height="30" rx="3"/><path d="M16 18h8M16 24h6"/></svg></div>', title: 'Tirages', desc: 'Choisis parmi 8 tirages. De 3 à 7 cartes selon ta question.' },
+  { icon: '<div style="width:56px;height:56px;border-radius:14px;background:var(--tint-bg);border:1px solid rgba(201,120,50,.2);display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;color:var(--tint);"><circle cx="22" cy="10" r="4"/><path d="M22 14v14"/><path d="M14 20l8 4 8-4"/><path d="M18 36l4-8 4 8"/><path d="M8 30c4-2 8 2 14-2s10 0 14-2"/></svg></div>', title: 'Arcanes', desc: 'Explore les 22 Arcanes Majeurs et leur symbolisme.' },
+  { icon: '<div style="width:56px;height:56px;border-radius:14px;background:var(--tint-bg);border:1px solid rgba(201,120,50,.2);display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;color:var(--tint);"><circle cx="22" cy="14" r="6"/><path d="M8 38c0-7 6-12 14-12s14 5 14 12"/></svg></div>', title: 'Moi', desc: 'Entre ta clé API et ton profil pour des lectures personnalisées.' },
+];
 
   let current = 0;
   const overlay = document.createElement('div');
@@ -940,18 +961,18 @@ function showTuto() {
   const render = () => {
     const s = steps[current];
     overlay.innerHTML = `
-      <div style="background:var(--glass-bg-strong);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-radius:var(--r-lg);border:1px solid var(--glass-border-outer);box-shadow:var(--glass-shadow-md);max-width:380px;width:100%;padding:36px 28px 28px;text-align:center;">
-        <div style="width:48px;height:48px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:32px;">${s.icon}</div>
-        <div style="font-size:17px;font-weight:700;color:var(--label);margin-bottom:10px;letter-spacing:.2px;">${s.title}</div>
-        <div style="font-size:14px;color:var(--label-2);line-height:1.7;margin-bottom:28px;">${s.desc}</div>
-        <div style="display:flex;gap:6px;justify-content:center;margin-bottom:24px;">
-          ${steps.map((_, i) => `<div style="width:6px;height:6px;border-radius:50%;background:${i === current ? 'var(--tint)' : 'var(--fill-2)'};transition:background .2s;"></div>`).join('')}
-        </div>
-        <div style="display:flex;gap:10px;">
-          <button onclick="document.getElementById('tuto-overlay').remove();try{localStorage.setItem('tuto_done','1')}catch(e){}" style="flex:1;background:var(--fill);border:none;color:var(--label-2);font-family:var(--font);font-size:12px;font-weight:600;letter-spacing:.5px;padding:12px;border-radius:100px;cursor:pointer;">Passer</button>
-          <button id="tuto-next" style="flex:2;background:var(--tint);border:none;color:#fff;font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px;border-radius:100px;cursor:pointer;">${current < steps.length - 1 ? 'Suivant →' : 'Commencer'}</button>
-        </div>
-      </div>`;
+  <div style="background:var(--glass-bg-strong);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-radius:var(--r-lg);border:1px solid var(--glass-border-outer);box-shadow:var(--glass-shadow-md);max-width:320px;width:100%;padding:40px 28px 28px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;">
+    <div style="width:56px;height:56px;display:flex;align-items:center;justify-content:center;">${s.icon}</div>
+    <div style="font-size:17px;font-weight:700;color:var(--label);letter-spacing:.1px;">${s.title}</div>
+    <div style="font-size:13px;color:var(--label-2);line-height:1.7;min-height:44px;">${s.desc}</div>
+    <div style="display:flex;gap:6px;justify-content:center;">
+      ${steps.map((_,i) => `<div style="width:6px;height:6px;border-radius:50%;background:${i===current?'var(--tint)':'var(--fill-2)'};transition:background .2s;"></div>`).join('')}
+    </div>
+    <div style="display:flex;gap:10px;width:100%;margin-top:4px;">
+      <button onclick="document.getElementById('tuto-overlay').remove();try{localStorage.setItem('tuto_done','1')}catch(e){}" style="flex:1;background:var(--fill);border:none;color:var(--label-2);font-family:var(--font);font-size:11px;font-weight:600;letter-spacing:.5px;padding:13px;border-radius:100px;cursor:pointer;">Passer</button>
+      <button id="tuto-next" style="flex:2;background:var(--tint);border:none;color:#fff;font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:13px;border-radius:100px;cursor:pointer;">${current < steps.length-1 ? 'Suivant →' : 'Commencer'}</button>
+    </div>
+  </div>`;
     $('tuto-next').onclick = () => {
       if (current < steps.length - 1) { current++; render(); }
       else { overlay.remove(); try { localStorage.setItem('tuto_done', '1'); } catch(e) {} }
@@ -993,3 +1014,47 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+function toggleLangMenu() {
+  const m = $('lang-menu');
+  m.style.display = m.style.display === 'none' ? 'block' : 'none';
+}
+
+function closeLangMenu() {
+  const m = $('lang-menu');
+  if (m) m.style.display = 'none';
+}
+
+function startSessionFromAccueil() {
+  const name = $('user-name-input-acc').value.trim();
+  const raw = $('groq-key-input-acc').value;
+  const key = raw.replace(/[\s\u00a0\u200b\ufeff]/g, '');
+  const st = $('groq-status-acc');
+  if (!name) { st.textContent = t().err_name; st.className = 'api-status err'; st.style.display = 'block'; return; }
+  if (key.length < 10) { st.textContent = t().err_key; st.className = 'api-status err'; st.style.display = 'block'; return; }
+
+  const btn = $('session-banner-accueil').querySelector('.api-btn');
+  btn.disabled = true;
+  btn.textContent = '· · ·';
+
+  setTimeout(() => {
+    groqKey = key;
+    try { localStorage.setItem('groq_key', key); localStorage.setItem('groq_name', name); } catch(e) {}
+    const un = $('user-name-input'); if (un) un.value = name;
+    const gk = $('groq-key-input'); if (gk) gk.value = key;
+
+    // Flash de confirmation
+    const banner = $('session-banner-accueil');
+    banner.innerHTML = `
+      <div style="background:var(--glass-bg);backdrop-filter:var(--blur);border-radius:var(--r-lg);border:1px solid var(--glass-border-outer);padding:20px 22px;margin-bottom:24px;text-align:center;animation:fadeInUp .4s ease;">
+        <div style="font-size:22px;margin-bottom:8px;">✦</div>
+        <div style="font-size:16px;font-weight:600;color:var(--label);">Bonjour, ${name}</div>
+      </div>`;
+
+    setTimeout(() => {
+      activateSession(name);
+      buildSpreadsWithDaily();
+      loadDailyReadingAccueil();
+    }, 1200);
+  }, 1000);
+}
