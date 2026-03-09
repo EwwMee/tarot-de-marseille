@@ -501,6 +501,7 @@ async function runAnalysis() {
       { role: 'assistant', content: raw }
     ];
     $('chat-section').style.display = 'block';
+    generateSuggestions(chatHistory, 'chat-input', 'sendChatMessage');
   } catch (err) {
     $('reading-result').innerHTML = `<div class="error-block"><div class="error-text">Erreur : ${err.message}</div></div>`;
   }
@@ -553,6 +554,8 @@ async function sendChatMessage() {
   $('chat-send').disabled = true;
   appendChatMsg('user', msg, 'chat-messages');
   chatHistory.push({ role: 'user', content: msg });
+  generateSuggestions(chatHistory, 'chat-input', 'sendChatMessage');
+  generateSuggestions(quickChatHistory, 'quick-chat-input', 'sendQuickChatMessage');
 
   const tid = 't' + Date.now();
   $('chat-messages').insertAdjacentHTML('beforeend',
@@ -585,6 +588,8 @@ async function sendQuickChatMessage() {
   $('quick-chat-send').disabled = true;
   appendChatMsg('user', msg, 'quick-chat-messages');
   quickChatHistory.push({ role: 'user', content: msg });
+  generateSuggestions(chatHistory, 'chat-input', 'sendChatMessage');
+  generateSuggestions(quickChatHistory, 'quick-chat-input', 'sendQuickChatMessage');
 
   const tid = 't' + Date.now();
   $('quick-chat-messages').insertAdjacentHTML('beforeend',
@@ -936,6 +941,7 @@ async function quickShuffleAndAnalyze() {
       { role: 'assistant', content: raw }
     ];
     $('quick-chat-section').style.display = 'block';
+    generateSuggestions(quickChatHistory, 'quick-chat-input', 'sendQuickChatMessage');
   } catch(err) {
     resultEl.innerHTML = `<div class="error-block"><div class="error-text">Erreur : ${err.message}</div></div>`;
   }
@@ -1137,3 +1143,63 @@ function startSessionFromAccueil() {
     animateTransition(active, nextEl, direction);
   }, { passive: true });
 })();
+
+// ─── SUGGESTIONS ───
+// ─── SUGGESTIONS ───
+async function generateSuggestions(history, inputId, sendFnName) {
+  const existingBlock = document.querySelector('.suggestions-row');
+  if (existingBlock) existingBlock.remove();
+
+  const block = document.createElement('div');
+  block.className = 'suggestions-row';
+  block.style.cssText = 'display:flex;flex-wrap:nowrap;gap:6px;padding:10px 16px;border-top:1px solid rgba(255,255,255,.4);overflow-x:scroll;scrollbar-width:none;-ms-overflow-style:none;';
+  block.innerHTML = [1,2,3].map(() => `<div style="height:28px;width:90px;border-radius:20px;background:var(--fill);animation:pulse 2s infinite;"></div>`).join('');
+
+  const chatSection = inputId === 'chat-input' ? $('chat-section') : $('quick-chat-section');
+  if (!chatSection) return;
+  const inputArea = chatSection.querySelector('.chat-input-area');
+  if (!inputArea) return;
+  chatSection.insertBefore(block, inputArea);
+
+  try {
+    const raw = await callGroq([
+      ...history,
+      { role: 'user', content: 'Génère exactement 3 questions très courtes (max 6 mots chacune) pour approfondir. Une par ligne, sans numéro, sans tiret.' }
+    ]);
+
+    const questions = raw.split('\n')
+      .map(q => q.trim().replace(/^[-•\d.)]+\s*/, ''))
+      .filter(q => q.length > 4)
+      .slice(0, 3);
+
+    block.innerHTML = questions.map(q =>
+      `<button onclick="useSuggestion('${q.replace(/'/g,"\\'")}','${inputId}','${sendFnName}')"
+        style="background:var(--tint-bg);border:1px solid rgba(201,120,50,.2);border-radius:20px;padding:6px 12px;font-family:var(--font);font-size:12px;font-weight:500;color:var(--tint);cursor:pointer;white-space:nowrap;">${q}</button>`
+    ).join('');
+  } catch(e) {
+    block.remove();
+  }
+}
+
+function useSuggestion(question, inputId, sendFnName) {
+  const block = document.querySelector('.suggestions-row');
+  if (block) block.remove();
+  const input = $(inputId);
+  if (!input) return;
+  input.value = question;
+  if (sendFnName === 'sendChatMessage') sendChatMessage();
+  else sendQuickChatMessage();
+}
+
+block.style.cssText = 'display:flex;flex-wrap:nowrap;gap:6px;padding:10px 16px;border-top:1px solid rgba(255,255,255,.4);overflow:scroll;';
+
+let isDown = false, startX, scrollLeft;
+block.addEventListener('mousedown', e => { isDown = true; startX = e.pageX - block.offsetLeft; scrollLeft = block.scrollLeft; });
+block.addEventListener('mouseleave', () => isDown = false);
+block.addEventListener('mouseup', () => isDown = false);
+block.addEventListener('mousemove', e => {
+  if (!isDown) return;
+  e.preventDefault();
+  block.scrollLeft = scrollLeft - (e.pageX - block.offsetLeft - startX);
+});
+block.addEventListener('wheel', e => { e.preventDefault(); block.scrollLeft += e.deltaY; }, { passive: false });

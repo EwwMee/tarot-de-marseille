@@ -2428,3 +2428,10 @@ body.dark .nav-tab.active { color: var(--tint); background: rgba(201,120,50,.1);
     background: var(--tint);
   }
 }
+
+.suggestions-row {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: scroll;
+}
+
+.suggestions-row::-webkit-scrollbar { display: none; }
