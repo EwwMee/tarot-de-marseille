@@ -2182,6 +2182,23 @@ header {
   .container {
     padding: 24px 14px 80px;
   }
+
+  #mute-btn, #theme-btn, #lang-btn {
+  z-index: 200;
+  bottom: calc(var(--btn-bottom, 20px) + 60px + env(safe-area-inset-bottom));
+}
+
+#theme-btn {
+  bottom: calc(68px + 60px + env(safe-area-inset-bottom));
+}
+
+#lang-btn {
+  bottom: calc(116px + 60px + env(safe-area-inset-bottom));
+}
+
+#mute-btn {
+  bottom: calc(20px + 60px + env(safe-area-inset-bottom));
+}
 }
 
 /* ── DARK MODE NAV ── */
