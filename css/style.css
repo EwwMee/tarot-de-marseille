@@ -2366,10 +2366,11 @@ header { margin-left: 72px; }
   .screen { margin-left: 0; }
   .container { padding: 24px 14px calc(80px + env(safe-area-inset-bottom)); }
 
-  #mute-btn  { bottom: calc(20px  + 60px + env(safe-area-inset-bottom)); }
-  #theme-btn { bottom: calc(68px  + 60px + env(safe-area-inset-bottom)); }
-  #lang-btn  { bottom: calc(116px + 60px + env(safe-area-inset-bottom)); }
-  #lang-menu { bottom: calc(164px + 60px + env(safe-area-inset-bottom)); }
+#mute-btn  { bottom: calc(20px  + 60px + env(safe-area-inset-bottom)) !important; }
+#theme-btn { bottom: calc(68px  + 60px + env(safe-area-inset-bottom)) !important; }
+#lang-btn  { bottom: calc(116px + 60px + env(safe-area-inset-bottom)) !important; }
+#lang-menu { bottom: calc(164px + 60px + env(safe-area-inset-bottom)) !important; }
+
 
   .nav-tab.active { background: none !important; }
   .nav-tab.active::after {
