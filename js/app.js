@@ -6,6 +6,7 @@ let activeSlotIndex = null;
 let chatHistory = [];
 let readingContext = '';
 let groqKey = '';
+let quickChatHistory = [];
 
 const GROQ_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
@@ -15,55 +16,94 @@ function t() { return L[lang]; }
 function $(id) { return document.getElementById(id); }
 function $q(sel) { return document.querySelector(sel); }
 
+// ─── PROFIL ───
+function saveProfil() {
+  const p = {
+    age: $('profil-age') ? $('profil-age').value : '',
+    situation: $('profil-situation') ? $('profil-situation').value : '',
+    domaine: $('profil-domaine') ? $('profil-domaine').value : '',
+    intention: $('profil-intention') ? $('profil-intention').value : '',
+  };
+  try { localStorage.setItem('tarot_profil', JSON.stringify(p)); } catch(e) {}
+}
+
+function loadProfil() {
+  try {
+    const p = JSON.parse(localStorage.getItem('tarot_profil') || '{}');
+    if ($('profil-age') && p.age) $('profil-age').value = p.age;
+    if ($('profil-situation') && p.situation) $('profil-situation').value = p.situation;
+    if ($('profil-domaine') && p.domaine) $('profil-domaine').value = p.domaine;
+    if ($('profil-intention') && p.intention) $('profil-intention').value = p.intention;
+  } catch(e) {}
+}
+
+function getProfilContext() {
+  try {
+    const p = JSON.parse(localStorage.getItem('tarot_profil') || '{}');
+    const parts = [];
+    if (p.age) parts.push(`Âge : ${p.age} ans`);
+    if (p.situation) parts.push(`Situation amoureuse : ${p.situation}`);
+    if (p.domaine) parts.push(`Domaine prioritaire : ${p.domaine}`);
+    if (p.intention) parts.push(`Contexte personnel : ${p.intention}`);
+    return parts.length ? '\n\nContexte de la personne :\n' + parts.join('\n') : '';
+  } catch(e) { return ''; }
+}
+
 // ─── LANG ───
 function setLang(l) {
   lang = l;
-  try { localStorage.setItem('tarot_lang', l); } catch (e) { }
-  $('btn-lang-fr').classList.toggle('active', l === 'fr');
-  $('btn-lang-pt').classList.toggle('active', l === 'pt');
+  try { localStorage.setItem('tarot_lang', l); } catch (e) {}
+
+  // Nav lang buttons
+  const fr = $('btn-lang-fr'); if (fr) { fr.classList.toggle('active', l === 'fr'); }
+  const pt = $('btn-lang-pt'); if (pt) { pt.classList.toggle('active', l === 'pt'); }
+  const pfr = $('pref-lang-fr'); if (pfr) { pfr.classList.toggle('active', l === 'fr'); }
+  const ppt = $('pref-lang-pt'); if (ppt) { ppt.classList.toggle('active', l === 'pt'); }
+
   const T = t();
 
+  // Nav labels
+  const nlA = $('nav-label-accueil'); if (nlA) nlA.textContent = T.nav_accueil || 'Accueil';
+  const nlT = $('nav-label-tirages'); if (nlT) nlT.textContent = T.nav_tirage;
+  const nlAr = $('nav-label-arcanes'); if (nlAr) nlAr.textContent = T.nav_arcanes;
+  const nlM = $('nav-label-moi'); if (nlM) nlM.textContent = T.nav_moi || 'Moi';
+
   const map = {
-    'site-sub': T.site_sub,
     'btn-analyze': T.analyze,
     'btn-shuffle': T.shuffle,
     'shuffle-note': T.shuffle_note,
     'question-optional': T.question_optional,
     'chat-send': T.chat_send,
+    'quick-chat-send': T.chat_send,
     'm-title-kws': T.m_kws,
     'm-title-up': T.m_up,
     'm-title-rev': T.m_rev,
     'm-title-sym': T.m_sym,
     'm-title-dom': T.m_dom,
+    'label-choose': T.choose,
+    'label-arcanes': T.lib_title,
+    'label-profil': T.profil_title || 'Mon profil',
+    'api-banner-title': T.session_title,
+    'deepen-title': T.deepen_title,
+    'deepen-desc': T.deepen_desc,
+    'quick-deepen-title': T.deepen_title,
+    'quick-deepen-desc': T.deepen_desc,
+    'quick-label': T.quick_label || 'Tirage rapide',
   };
-  Object.entries(map).forEach(([id, val]) => { const el = $(id); if (el) el.textContent = val; });
+  Object.entries(map).forEach(([id, val]) => { const el = $(id); if (el && val) el.textContent = val; });
 
   const phMap = {
     'user-name-input': T.name_ph,
     'groq-key-input': T.key_ph,
     'question-input': T.question_ph,
     'chat-input': T.chat_ph,
+    'quick-chat-input': T.chat_ph,
   };
   Object.entries(phMap).forEach(([id, ph]) => { const el = $(id); if (el) el.placeholder = ph; });
 
-  const qMap = {
-    '[onclick="startSession()"]': T.start_btn,
-    '[onclick="endSession()"]': T.end_btn,
-    '.api-banner-title': T.session_title,
-    '.api-note': T.session_note,
-    '.chat-header-title': T.deepen_title,
-    '.chat-header-desc': T.deepen_desc,
-    '#step1 .section-label': T.choose,
-    '#screen-arcanes .section-label': T.lib_title,
-  };
-  Object.entries(qMap).forEach(([sel, val]) => { const el = $q(sel); if (el) el.textContent = val; });
-
-  const navTabs = document.querySelectorAll('.nav-tab');
-  if (navTabs[0]) navTabs[0].textContent = T.nav_tirage;
-  if (navTabs[1]) navTabs[1].textContent = T.nav_arcanes;
-
   buildSpreads();
   buildLibrary();
+  buildSpreadsWithDaily();
 }
 
 // ─── SESSION ───
@@ -75,57 +115,68 @@ function startSession() {
   if (!name) { st.textContent = t().err_name; st.className = 'api-status err'; st.style.display = 'block'; return; }
   if (key.length < 10) { st.textContent = t().err_key; st.className = 'api-status err'; st.style.display = 'block'; return; }
   groqKey = key;
-  try { localStorage.setItem('groq_key', key); localStorage.setItem('groq_name', name); } catch (e) { }
+  try { localStorage.setItem('groq_key', key); localStorage.setItem('groq_name', name); } catch (e) {}
   activateSession(name);
-  if(document.getElementById('daily-text')) {
-  loadDailyReading();
-}
+  if (document.getElementById('daily-text')) loadDailyReading();
+  if (document.getElementById('daily-text-accueil')) loadDailyReadingAccueil();
 }
 
 function activateSession(name) {
-  $('api-banner').style.display = 'none';
+  const banner = $('api-banner');
+  if (banner) banner.style.display = 'none';
   const bar = $('session-bar');
-  bar.style.display = 'flex';
-  $('session-name').textContent = name;
+  if (bar) { bar.style.display = 'flex'; }
+  const sn = $('session-name');
+  if (sn) sn.textContent = name;
+  const pb = $('profil-block');
+  if (pb) pb.style.display = 'block';
+  const prb = $('prefs-block');
+  if (prb) prb.style.display = 'block';
+  loadProfil();
+  updatePrefsThemeBtn();
 }
 
 function endSession() {
-  try { localStorage.removeItem('groq_key'); localStorage.removeItem('groq_name'); } catch (e) { }
+  try { localStorage.removeItem('groq_key'); localStorage.removeItem('groq_name'); } catch (e) {}
   groqKey = '';
-  $('session-bar').style.display = 'none';
-  $('api-banner').style.display = 'block';
-  $('user-name-input').value = '';
-  $('groq-key-input').value = '';
-  $('groq-status').style.display = 'none';
+  const bar = $('session-bar'); if (bar) bar.style.display = 'none';
+  const banner = $('api-banner'); if (banner) banner.style.display = 'block';
+  const un = $('user-name-input'); if (un) un.value = '';
+  const gk = $('groq-key-input'); if (gk) gk.value = '';
+  const gs = $('groq-status'); if (gs) gs.style.display = 'none';
+  const pb = $('profil-block'); if (pb) pb.style.display = 'none';
+  const prb = $('prefs-block'); if (prb) prb.style.display = 'none';
   goStep1();
 }
 
 function loadSavedSession() {
   try {
     const savedLang = localStorage.getItem('tarot_lang');
-    if (savedLang === 'fr' || savedLang === 'pt') { lang = savedLang; setLang(savedLang); }
+    if (savedLang === 'fr' || savedLang === 'pt') { lang = savedLang; }
     const key = localStorage.getItem('groq_key');
     const name = localStorage.getItem('groq_name');
     if (key && key.length > 10 && name) { groqKey = key; activateSession(name); }
-  } catch (e) { }
+  } catch (e) {}
 
-try {
-  const saved = localStorage.getItem('tarot_theme');
-  if(saved === 'dark') {
-    document.body.classList.add('dark');
-    const btn = document.getElementById('theme-btn');
-    if(btn) btn.textContent = '☾';
-  } else if(saved === 'light') {
-    // forcé clair, rien à faire
-  } else {
-    // pas de préférence sauvegardée — suit le système
-    if(window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  try {
+    const saved = localStorage.getItem('tarot_theme');
+    if (saved === 'dark') {
       document.body.classList.add('dark');
-      const btn = document.getElementById('theme-btn');
-      if(btn) btn.textContent = '☾';
+      const btn = $('theme-btn'); if (btn) btn.textContent = '☾';
+    } else if (!saved) {
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+        const btn = $('theme-btn'); if (btn) btn.textContent = '☾';
+      }
     }
-  }
-} catch(e) {}
+  } catch(e) {}
+}
+
+function updatePrefsThemeBtn() {
+  const btn = $('pref-theme-btn');
+  if (!btn) return;
+  const dark = document.body.classList.contains('dark');
+  btn.textContent = dark ? '☾ Sombre' : '☀ Clair';
 }
 
 // ─── GROQ API ───
@@ -143,14 +194,16 @@ async function callGroq(messages) {
   const text = await res.text();
   let data;
   try { data = JSON.parse(text); } catch (e) { throw new Error('Bad response: ' + text.substring(0, 200)); }
-  if (!res.ok) throw new Error((data.error && data.error.message) || 'HTTP ' + res.status + ' ' + text.substring(0, 200));
+  if (!res.ok) throw new Error((data.error && data.error.message) || 'HTTP ' + res.status);
   return data.choices[0].message.content;
 }
 
 // ─── BUILD UI ───
 function buildSpreads() {
+  const el = $('spreads-list');
+  if (!el) return;
   const spreads = t().spreads;
-  $('spreads-list').innerHTML = spreads.map((s, i) => `
+  el.innerHTML = spreads.map((s, i) => `
     <div class="spread-row" onclick="selectSpread(${i})">
       <div class="spread-row-num">${String(i + 1).padStart(2, '0')}</div>
       <div class="spread-row-body"><div class="spread-row-name">${s.name}</div><div class="spread-row-meta">${s.desc}</div></div>
@@ -159,7 +212,9 @@ function buildSpreads() {
 }
 
 function buildLibrary() {
-  $('lib-grid').innerHTML = ARCANES.map((a, i) => {
+  const el = $('lib-grid');
+  if (!el) return;
+  el.innerHTML = ARCANES.map((a, i) => {
     const kws = (lang === 'pt' ? ARCANES_PT[i] : a).keywords;
     return '<div class="lib-row" onclick="openModal(' + i + ')">'
       + '<div class="lib-num">' + a.roman + '</div><div class="lib-name">' + a.name + '</div>'
@@ -182,9 +237,9 @@ function selectSpread(i) {
 
 function goStep1() {
   selectedSpread = null; slots = []; chatHistory = []; readingContext = '';
-  $('step3').style.display = 'none';
-  $('step2').style.display = 'none';
-  $('step1').style.display = 'block';
+  const s3 = $('step3'); if (s3) s3.style.display = 'none';
+  const s2 = $('step2'); if (s2) s2.style.display = 'none';
+  const s1 = $('step1'); if (s1) s1.style.display = 'block';
   window.scrollTo(0, 0);
 }
 
@@ -261,7 +316,8 @@ function shuffleDraw() {
 function renderAll() {
   renderVisualLayout();
   renderPositionList();
-  $('btn-analyze').disabled = slots.some(s => s.arcanaIndex === null);
+  const ba = $('btn-analyze');
+  if (ba) ba.disabled = slots.some(s => s.arcanaIndex === null);
 }
 
 function renderVisualLayout() {
@@ -335,7 +391,9 @@ function vcardHTML(i) {
 }
 
 function renderPositionList() {
-  $('positions-list').innerHTML = slots.map((slot, i) => {
+  const el = $('positions-list');
+  if (!el) return;
+  el.innerHTML = slots.map((slot, i) => {
     const pos = selectedSpread.positions[i];
     const parts = pos.split('—');
     const filled = slot.arcanaIndex !== null;
@@ -433,7 +491,7 @@ async function runAnalysis() {
     return `Position ${i + 1} (${selectedSpread.positions[i]}) : ${a.name} (Arcane ${a.roman})${slot.reversed ? ' RENVERSÉE' : ''}`;
   }).join('\n');
 
-  const sysPrompt = t().sys;
+  const sysPrompt = t().sys + getProfilContext();
   const userPrompt = buildPrompt();
 
   try {
@@ -446,7 +504,7 @@ async function runAnalysis() {
     ];
     $('chat-section').style.display = 'block';
   } catch (err) {
-    $('reading-result').innerHTML = `<div class="error-block"><div class="error-text">Erreur : ${err.message}</div><div class="error-text" style="font-size:12px;margin-top:8px;opacity:.7;">Vérifie ta clé Groq et que tu n'es pas sur file:// (utilise un serveur local ou GitHub Pages)</div></div>`;
+    $('reading-result').innerHTML = `<div class="error-block"><div class="error-text">Erreur : ${err.message}</div></div>`;
   }
 }
 
@@ -463,7 +521,6 @@ function buildPrompt() {
 function highlightText(text) {
   text = text.replace(/\*\*(.+?)\*\*/g, '<strong class="hl-bold">$1</strong>');
   text = text.replace(/^([→•\-]\s*.+)$/gm, '<span class="hl-point">$1</span>');
-  text = text.replace(/^([^—\n]+?)(?=\s*—)/gm, '<strong>$1</strong>');
   return text;
 }
 
@@ -485,7 +542,7 @@ function renderReading(raw) {
     : `<div class="reading-section"><div class="reading-section-title">${t().reading}</div><div class="reading-text">${fmtHL(raw)}</div></div>`;
 }
 
-// ─── CHAT ───
+// ─── CHAT (tirage principal) ───
 function chatKeydown(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
 }
@@ -496,38 +553,72 @@ async function sendChatMessage() {
   if (!msg) return;
   input.value = '';
   $('chat-send').disabled = true;
-  appendChatMsg('user', msg);
+  appendChatMsg('user', msg, 'chat-messages');
   chatHistory.push({ role: 'user', content: msg });
 
   const tid = 't' + Date.now();
   $('chat-messages').insertAdjacentHTML('beforeend',
     `<div class="chat-typing" id="${tid}"><span style="min-width:36px;font-size:9px;letter-spacing:2px;color:var(--label-3)">IA</span><span>· · ·</span></div>`);
-  scrollChat();
+  scrollChat('chat-messages');
 
   try {
     const raw = await callGroq(chatHistory);
     $(tid)?.remove();
-    appendChatMsg('ai', raw);
+    appendChatMsg('ai', raw, 'chat-messages');
     chatHistory.push({ role: 'assistant', content: raw });
   } catch (err) {
     $(tid)?.remove();
-    appendChatMsg('ai', err.message);
+    appendChatMsg('ai', err.message, 'chat-messages');
   }
   $('chat-send').disabled = false;
   input.focus();
 }
 
-function appendChatMsg(role, text) {
+// ─── CHAT (tirage rapide) ───
+function quickChatKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendQuickChatMessage(); }
+}
+
+async function sendQuickChatMessage() {
+  const input = $('quick-chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  $('quick-chat-send').disabled = true;
+  appendChatMsg('user', msg, 'quick-chat-messages');
+  quickChatHistory.push({ role: 'user', content: msg });
+
+  const tid = 't' + Date.now();
+  $('quick-chat-messages').insertAdjacentHTML('beforeend',
+    `<div class="chat-typing" id="${tid}"><span style="min-width:36px;font-size:9px;letter-spacing:2px;color:var(--label-3)">IA</span><span>· · ·</span></div>`);
+  scrollChat('quick-chat-messages');
+
+  try {
+    const raw = await callGroq(quickChatHistory);
+    $(tid)?.remove();
+    appendChatMsg('ai', raw, 'quick-chat-messages');
+    quickChatHistory.push({ role: 'assistant', content: raw });
+  } catch (err) {
+    $(tid)?.remove();
+    appendChatMsg('ai', err.message, 'quick-chat-messages');
+  }
+  $('quick-chat-send').disabled = false;
+  input.focus();
+}
+
+function appendChatMsg(role, text, containerId) {
+  const container = $(containerId || 'chat-messages');
+  if (!container) return;
   const el = document.createElement('div');
   el.className = `chat-msg ${role}`;
   el.innerHTML = `<div class="chat-msg-role">${role === 'user' ? t().you : t().ai}</div><div class="chat-msg-text">${fmt(text)}</div>`;
-  $('chat-messages').appendChild(el);
-  scrollChat();
+  container.appendChild(el);
+  scrollChat(containerId || 'chat-messages');
 }
 
-function scrollChat() {
-  const el = $('chat-messages');
-  el.scrollTop = el.scrollHeight;
+function scrollChat(id) {
+  const el = $(id || 'chat-messages');
+  if (el) el.scrollTop = el.scrollHeight;
 }
 
 // ─── ARCANE MODAL ───
@@ -564,9 +655,10 @@ function showScreen(id, btn) {
   btn.classList.add('active');
 }
 
+// ─── AUDIO ───
 function toggleMute() {
-  const audio = document.getElementById('bg-audio');
-  const btn = document.getElementById('mute-btn');
+  const audio = $('bg-audio');
+  const btn = $('mute-btn');
   if (audio.muted) {
     audio.muted = false;
     btn.classList.remove('muted');
@@ -581,49 +673,35 @@ function toggleMute() {
 }
 
 function handleSplashClick() {
-  document.getElementById('bg-audio').play().catch(() => {});
+  $('bg-audio').play().catch(() => {});
   hideSplash();
 }
 
 function hideSplash() {
-  const splash = document.getElementById('splash');
-  const card = document.getElementById('splash-card');
-
+  const splash = $('splash');
+  const card = $('splash-card');
   const startTime = performance.now();
   const duration = 550;
 
-  // Courbe bezier custom pour y : 0 → -12vh (saut) → 140vh (chute)
-  // t 0→0.25 : monte doucement puis accélère vers le haut
-  // t 0.25→0.4 : ralentit en haut (apex)
-  // t 0.4→1 : tombe, lent au début puis accélère fortement
-
   const fall = (now) => {
     const t = Math.min((now - startTime) / duration, 1);
-
     let y, rot, opacity;
-
-    if(t < 0.4) {
-      // Phase montée : ease-in-out vers l'apex
+    if (t < 0.4) {
       const t2 = t / 0.4;
-      const curve = t2 * t2 * (3 - 2 * t2); // smoothstep — lent→rapide→lent
-      y = -12 * curve;
-      rot = -3 * curve;
-      opacity = 1;
+      const curve = t2 * t2 * (3 - 2 * t2);
+      y = -12 * curve; rot = -3 * curve; opacity = 1;
       card.style.filter = `blur(${curve * 1}px)`;
     } else {
-      // Phase chute : part lentement de l'apex, accélère comme gravité
       const t2 = (t - 0.4) / 0.6;
-      const gravity = Math.pow(t2, 2.2); // lent au début, très rapide à la fin
+      const gravity = Math.pow(t2, 2.2);
       y = -12 + (12 + 140) * gravity;
       rot = -3 + t2 * 32;
       opacity = t2 < 0.35 ? 1 : 1 - Math.pow((t2 - 0.35) / 0.65, 1.2);
       card.style.filter = `blur(${gravity * 140}px)`;
     }
-
     card.style.transform = `translateY(${y}vh) rotate(${rot}deg) rotateY(${t < 0.4 ? 0 : ((t - 0.4) / 0.6) * 300}deg)`;
     card.style.opacity = Math.max(0, opacity);
-
-    if(t < 1) {
+    if (t < 1) {
       requestAnimationFrame(fall);
     } else {
       splash.style.transition = 'opacity .3s ease';
@@ -631,48 +709,24 @@ function hideSplash() {
       setTimeout(() => splash.remove(), 300);
     }
   };
-
   requestAnimationFrame(fall);
-
-  setTimeout(() => {
-  document.getElementById('bg-audio').play().catch(() => {});
-}, 500);
+  setTimeout(() => { $('bg-audio').play().catch(() => {}); }, 500);
 }
 
-// ─── INIT ───
-setTimeout(hideSplash, 1500);
-function init() {
-  buildLibrary();
-  loadSavedSession();
-  buildSpreadsWithDaily();
-const audio = document.getElementById('bg-audio');
-audio.volume = 0.35;
-document.addEventListener('click', () => audio.play().catch(() => {}), { once: true });
-setInterval(() => {
-  const today = new Date().toISOString().split('T')[0];
-  try {
-    const saved = JSON.parse(localStorage.getItem('daily_card') || '{}');
-    if(saved.date !== today) buildSpreadsWithDaily();
-  } catch(e) {}
-}, 60000);
-try {
-  if(!localStorage.getItem('tuto_done')) setTimeout(showTuto, 2000);
-} catch(e) {}
-}
-
-document.addEventListener('DOMContentLoaded', init);
-
+// ─── THEME ───
 function toggleTheme() {
   const dark = document.body.classList.toggle('dark');
-  document.getElementById('theme-btn').textContent = dark ? '☾' : '☀';
+  const tb = $('theme-btn'); if (tb) tb.textContent = dark ? '☾' : '☀';
   try { localStorage.setItem('tarot_theme', dark ? 'dark' : 'light'); } catch(e) {}
+  updatePrefsThemeBtn();
 }
 
+// ─── DAILY CARD ───
 function getDailyCard() {
   const today = new Date().toISOString().split('T')[0];
   try {
     const saved = JSON.parse(localStorage.getItem('daily_card') || '{}');
-    if(saved.date === today) return saved;
+    if (saved.date === today) return saved;
     const index = Math.floor(Math.random() * 22);
     const reversed = Math.random() < 0.3;
     const entry = { date: today, index, reversed, unlocked: false };
@@ -687,123 +741,189 @@ function unlockDailyCard() {
   const today = new Date().toISOString().split('T')[0];
   try {
     const saved = JSON.parse(localStorage.getItem('daily_card') || '{}');
-    if(saved.date === today) {
-      saved.unlocked = true;
-      localStorage.setItem('daily_card', JSON.stringify(saved));
-    }
+    if (saved.date === today) { saved.unlocked = true; localStorage.setItem('daily_card', JSON.stringify(saved)); }
   } catch(e) {}
   buildSpreadsWithDaily();
+  loadDailyReadingAccueil();
 }
 
-function resetDailyCard() {
-  try { localStorage.removeItem('daily_card'); } catch(e) {}
-  buildSpreadsWithDaily();
-}
-
-async function loadDailyReading() {
-  if(!groqKey) return;
+// ─── DAILY READING (accueil) ───
+async function loadDailyReadingAccueil() {
+  if (!groqKey) return;
   const daily = getDailyCard();
+  if (!daily.unlocked) return;
   const a = ARCANES[daily.index];
-  const prompt = `Carte du jour : ${a.name} (Arcane ${a.roman})${daily.reversed?' — RENVERSÉE':''}.
+  const prompt = `Carte du jour : ${a.name} (Arcane ${a.roman})${daily.reversed ? ' — RENVERSÉE' : ''}.
 Mots-clés : ${a.keywords.join(', ')}.
 En 2-3 phrases courtes et directes, dis ce que cette carte signifie pour aujourd'hui. Pas de titre, pas de "PARTIE", pas de structure. Juste le texte brut.`;
 
   try {
     const today = new Date().toISOString().split('T')[0];
-const savedRaw = localStorage.getItem('daily_reading_' + today);
-const savedIndex = localStorage.getItem('daily_reading_index_' + today);
-const savedReading = savedRaw && parseInt(savedIndex) === daily.index ? savedRaw : null;
+    const savedRaw = localStorage.getItem('daily_reading_' + today);
+    const savedIndex = localStorage.getItem('daily_reading_index_' + today);
+    const savedReading = savedRaw && parseInt(savedIndex) === parseInt(daily.index) ? savedRaw : null;
 
-if(savedReading) {
-      const el = document.getElementById('daily-text');
-      if(el) {
-        const parts = savedReading.split('→');
-        let html = fmt(parts[0].trim());
-        if(parts[1]) html += `<span class="hl-point">→ ${parts[1].trim()}</span>`;
-        el.innerHTML = html;
-      }
+    const el = $('daily-text-accueil');
+    if (!el) return;
+
+    if (savedReading) {
+      const parts = savedReading.split('→');
+      let html = fmt(parts[0].trim());
+      if (parts[1]) html += `<span class="hl-point">→ ${parts[1].trim()}</span>`;
+      el.innerHTML = html;
       return;
     }
 
     const raw = await callGroq([
-      { role: 'system', content: t().sys },
+      { role: 'system', content: t().sys + getProfilContext() },
       { role: 'user', content: prompt }
     ]);
+    localStorage.setItem('daily_reading_' + today, raw);
     localStorage.setItem('daily_reading_index_' + today, daily.index);
-    const el = document.getElementById('daily-text');
-    if(el) {
-      const parts = raw.split('→');
-      let html = fmt(parts[0].trim());
-      if(parts[1]) html += `<span class="hl-point">→ ${parts[1].trim()}</span>`;
-      el.innerHTML = html;
-    }
+    const parts = raw.split('→');
+    let html = fmt(parts[0].trim());
+    if (parts[1]) html += `<span class="hl-point">→ ${parts[1].trim()}</span>`;
+    el.innerHTML = html;
   } catch(e) {
-    const el = document.getElementById('daily-text');
-    if(el) el.textContent = '—';
+    const el = $('daily-text-accueil');
+    if (el) el.textContent = '—';
   }
 }
 
+// ─── BUILD DAILY CARD (accueil) ───
 function buildSpreadsWithDaily() {
-  const container = document.getElementById('step1');
-  const existing = document.getElementById('daily-block');
-  if(existing) existing.remove();
-  container.insertAdjacentHTML('afterbegin', buildDailyCard());
-  loadDailyReading();
-}
+  const container = $('daily-block-accueil');
+  if (!container) return;
 
-function buildDailyCard() {
   const daily = getDailyCard();
   const a = ARCANES[daily.index];
   const now = new Date();
-  const midnight = new Date(); midnight.setHours(24,0,0,0);
+  const midnight = new Date(); midnight.setHours(24, 0, 0, 0);
   const diff = midnight - now;
   const h = Math.floor(diff / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
 
-  if(!daily.unlocked) {
-    return `
-      <div id="daily-block" style="margin-bottom:24px;">
-        <p class="section-label">Carte du jour</p>
-        <div onclick="unlockDailyCard()" class="daily-locked">
-          <div style="
-            width:56px;height:56px;border-radius:50%;
-            background:var(--tint-bg);
-            border:1.5px solid var(--tint);
-            display:flex;align-items:center;justify-content:center;
-            font-size:22px;
-          ">✦</div>
-          <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tint);">Révéler la carte du jour</div>
-          <div style="font-size:12px;color:var(--label-3);text-align:center;line-height:1.6;">Votre carte quotidienne vous attend.<br>Elle changera dans ${h}h ${m}m.</div>
-        </div>
-      </div>
-    `;
+  if (!daily.unlocked) {
+    container.innerHTML = `
+      <p class="section-label">Carte du jour</p>
+      <div onclick="unlockDailyCard()" class="daily-locked" style="margin-bottom:24px;">
+        <div style="width:56px;height:56px;border-radius:50%;background:var(--tint-bg);border:1.5px solid var(--tint);display:flex;align-items:center;justify-content:center;font-size:22px;">✦</div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tint);">Révéler la carte du jour</div>
+        <div style="font-size:12px;color:var(--label-3);text-align:center;line-height:1.6;">Votre carte quotidienne vous attend.<br>Elle changera dans ${h}h ${m}m.</div>
+      </div>`;
+    return;
   }
 
-  return `
-    <div id="daily-block" style="margin-bottom:24px;">
-      <p class="section-label">Carte du jour</p>
-      <div style="background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--glass-shadow);border:1px solid var(--glass-border-outer);">
-        <div style="padding:20px 22px;display:flex;align-items:center;gap:20px;">
-          <div style="width:64px;height:64px;flex-shrink:0;color:${daily.reversed?'var(--red)':'var(--tint)'};">${ARCANA_SVG[daily.index]}</div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--label-3);margin-bottom:4px;">Arcane ${a.roman}${daily.reversed?' · <span style="color:var(--red)">Renversée</span>':''}</div>
-            <div style="font-size:18px;font-weight:500;color:var(--label);margin-bottom:8px;">${a.name}</div>
-            <div style="display:flex;gap:5px;flex-wrap:wrap;">${a.keywords.map(k=>`<span style="font-size:11px;font-weight:500;color:var(--label-2);background:var(--fill);padding:3px 10px;border-radius:20px;">${k}</span>`).join('')}</div>
-          </div>
-        </div>
-        <div id="daily-reading" style="padding:0 22px 20px;font-size:14px;color:var(--label-2);line-height:1.7;">
-          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--label-3);margin-bottom:8px;">Lecture du jour</div>
-          <div id="daily-text"><span style="color:var(--label-3);animation:pulse 2s infinite;display:inline-block;">· · ·</span></div>
-        </div>
-        <div style="padding:12px 22px;border-top:1px solid var(--glass-border-outer);display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:11px;color:var(--label-3);">Nouvelle carte dans ${h}h ${m}m</span>
-          <span style="font-size:11px;font-weight:600;color:var(--tint);cursor:pointer;" onclick="openModal(${daily.index})">Voir l'arcane →</span>
+  container.innerHTML = `
+    <p class="section-label">Carte du jour</p>
+    <div style="background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--glass-shadow);border:1px solid var(--glass-border-outer);margin-bottom:28px;">
+      <div style="padding:20px 22px;display:flex;align-items:center;gap:20px;">
+        <div style="width:64px;height:64px;flex-shrink:0;color:${daily.reversed ? 'var(--red)' : 'var(--tint)'};">${ARCANA_SVG[daily.index]}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--label-3);margin-bottom:4px;">Arcane ${a.roman}${daily.reversed ? ' · <span style="color:var(--red)">Renversée</span>' : ''}</div>
+          <div style="font-size:18px;font-weight:500;color:var(--label);margin-bottom:8px;">${a.name}</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">${a.keywords.map(k => `<span style="font-size:11px;font-weight:500;color:var(--label-2);background:var(--fill);padding:3px 10px;border-radius:20px;">${k}</span>`).join('')}</div>
         </div>
       </div>
-    </div>
-  `;
+      <div style="padding:0 22px 20px;font-size:14px;color:var(--label-2);line-height:1.7;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--label-3);margin-bottom:8px;">Lecture du jour</div>
+        <div id="daily-text-accueil"><span style="color:var(--label-3);animation:pulse 2s infinite;display:inline-block;">· · ·</span></div>
+      </div>
+      <div style="padding:12px 22px;border-top:1px solid var(--glass-border-outer);display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:11px;color:var(--label-3);">Nouvelle carte dans ${h}h ${m}m</span>
+        <span style="font-size:11px;font-weight:600;color:var(--tint);cursor:pointer;" onclick="openModal(${daily.index})">Voir l'arcane →</span>
+      </div>
+    </div>`;
+
+  loadDailyReadingAccueil();
 }
 
+// ─── TIRAGE RAPIDE ───
+async function quickShuffleAndAnalyze() {
+  if (!groqKey) {
+    showScreen('moi', $('nav-moi'));
+    return;
+  }
+
+  const btn = $('btn-quick-shuffle');
+  btn.disabled = true;
+  btn.textContent = '· · ·';
+
+  const quickResult = $('quick-result');
+  quickResult.style.display = 'block';
+  $('quick-chat-section').style.display = 'none';
+  $('quick-chat-messages').innerHTML = '';
+  quickChatHistory = [];
+
+  // Tirer 3 cartes aléatoires
+  const indices = Array.from({ length: 22 }, (_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  const quickSlots = indices.slice(0, 3).map(idx => ({ arcanaIndex: idx, reversed: Math.random() < .3 }));
+  const positions = ['Le Passé', 'Le Présent', 'Le Futur'];
+
+  // Afficher les cartes
+  const layout = $('quick-layout');
+  layout.innerHTML = quickSlots.map((slot, i) => {
+    const a = ARCANES[slot.arcanaIndex];
+    return `<div class="vcard filled${slot.reversed ? ' reversed-v' : ''}" style="cursor:default;">
+      ${slot.reversed ? '<div class="vcard-rev-mark">↑</div>' : ''}
+      <div class="vcard-num">${a.roman}</div>
+      <div class="vcard-svg">${ARCANA_SVG[slot.arcanaIndex]}</div>
+      <div class="vcard-name">${a.name}</div>
+    </div>`;
+  }).join('');
+
+  // Animation d'apparition
+  setTimeout(() => {
+    layout.querySelectorAll('.vcard').forEach((el, i) => {
+      el.style.opacity = '0'; el.style.transform = 'translateY(-12px) scale(.95)'; el.style.transition = 'none';
+      void el.offsetWidth;
+      el.style.transition = `opacity .3s ${i * 80}ms ease, transform .3s ${i * 80}ms cubic-bezier(.34,1.4,.64,1)`;
+      el.style.opacity = '1'; el.style.transform = 'translateY(0) scale(1)';
+    });
+  }, 50);
+
+  // Générer la lecture
+  const resultEl = $('quick-reading-result');
+  resultEl.innerHTML = `<div class="loading-block"><div class="loading-text">${t().loading}</div></div>`;
+
+  const lines = quickSlots.map((slot, i) => {
+    const a = ARCANES[slot.arcanaIndex];
+    return `Position ${i + 1} (${positions[i]}) : ${a.name} (Arcane ${a.roman})${slot.reversed ? ' — RENVERSÉE' : ''}\nMots-clés : ${a.keywords.join(', ')}\nSens endroit : ${a.upright}\nSens renversé : ${a.reversed}`;
+  }).join('\n\n');
+
+  const sysPrompt = t().sys + getProfilContext();
+  const userPrompt = t().prompt('Passé · Présent · Futur', '3 cartes · trajectoire temporelle', lines, '');
+
+  try {
+    const raw = await callGroq([{ role: 'system', content: sysPrompt }, { role: 'user', content: userPrompt }]);
+
+    const p1 = raw.match(/PARTIE\s*1[^:\n]*[:\n]([\s\S]*?)(?=PARTIE\s*2|$)/i);
+    const p2 = raw.match(/PARTIE\s*2[^:\n]*[:\n]([\s\S]*)/i);
+    const fmtHL = s => fmt(highlightText(s));
+    resultEl.innerHTML = p1 && p2
+      ? `<div class="reading-section"><div class="reading-section-title">${t().card_by_card}</div><div class="reading-text">${fmtHL(p1[1].trim())}</div></div>
+         <div class="reading-section"><div class="reading-section-title">${t().global_r}</div><div class="reading-text">${fmtHL(p2[1].trim())}</div></div>`
+      : `<div class="reading-section"><div class="reading-section-title">${t().reading}</div><div class="reading-text">${fmtHL(raw)}</div></div>`;
+
+    quickChatHistory = [
+      { role: 'system', content: sysPrompt },
+      { role: 'user', content: userPrompt },
+      { role: 'assistant', content: raw }
+    ];
+    $('quick-chat-section').style.display = 'block';
+  } catch(err) {
+    resultEl.innerHTML = `<div class="error-block"><div class="error-text">Erreur : ${err.message}</div></div>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Nouveau tirage →';
+}
+
+// ─── TUTO ───
 function showTuto() {
   const steps = [
     { icon: '✦', title: 'Carte du jour', desc: 'Chaque jour une carte t\'attend. Révèle-la pour recevoir un message personnalisé.' },
@@ -813,57 +933,63 @@ function showTuto() {
   ];
 
   let current = 0;
-
   const overlay = document.createElement('div');
   overlay.id = 'tuto-overlay';
-  overlay.style.cssText = `
-    position:fixed;inset:0;z-index:2000;
-    background:rgba(200,200,210,.25);
-    backdrop-filter:blur(24px) saturate(180%);
-    -webkit-backdrop-filter:blur(24px) saturate(180%);
-    display:flex;align-items:center;justify-content:center;padding:16px;
-  `;
+  overlay.style.cssText = `position:fixed;inset:0;z-index:2000;background:rgba(200,200,210,.25);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);display:flex;align-items:center;justify-content:center;padding:16px;`;
 
   const render = () => {
     const s = steps[current];
     overlay.innerHTML = `
-      <div style="
-        background:var(--glass-bg-strong);
-        backdrop-filter:var(--blur);
-        -webkit-backdrop-filter:var(--blur);
-        border-radius:var(--r-lg);
-        border:1px solid var(--glass-border-outer);
-        box-shadow:var(--glass-shadow-md);
-        max-width:380px;width:100%;
-        padding:36px 28px 28px;
-        text-align:center;
-      ">
+      <div style="background:var(--glass-bg-strong);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-radius:var(--r-lg);border:1px solid var(--glass-border-outer);box-shadow:var(--glass-shadow-md);max-width:380px;width:100%;padding:36px 28px 28px;text-align:center;">
         <div style="width:48px;height:48px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:32px;">${s.icon}</div>
         <div style="font-size:17px;font-weight:700;color:var(--label);margin-bottom:10px;letter-spacing:.2px;">${s.title}</div>
         <div style="font-size:14px;color:var(--label-2);line-height:1.7;margin-bottom:28px;">${s.desc}</div>
         <div style="display:flex;gap:6px;justify-content:center;margin-bottom:24px;">
-          ${steps.map((_,i) => `<div style="width:6px;height:6px;border-radius:50%;background:${i===current?'var(--tint)':'var(--fill-2)'};transition:background .2s;"></div>`).join('')}
+          ${steps.map((_, i) => `<div style="width:6px;height:6px;border-radius:50%;background:${i === current ? 'var(--tint)' : 'var(--fill-2)'};transition:background .2s;"></div>`).join('')}
         </div>
         <div style="display:flex;gap:10px;">
-          <button onclick="document.getElementById('tuto-overlay').remove();try{localStorage.setItem('tuto_done','1')}catch(e){}" style="
-            flex:1;background:var(--fill);border:none;color:var(--label-2);
-            font-family:var(--font);font-size:12px;font-weight:600;letter-spacing:.5px;
-            padding:12px;border-radius:100px;cursor:pointer;
-          ">Passer</button>
-          <button id="tuto-next" style="
-            flex:2;background:var(--tint);border:none;color:#fff;
-            font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:1px;
-            text-transform:uppercase;padding:12px;border-radius:100px;cursor:pointer;
-          ">${current < steps.length-1 ? 'Suivant →' : 'Commencer'}</button>
+          <button onclick="document.getElementById('tuto-overlay').remove();try{localStorage.setItem('tuto_done','1')}catch(e){}" style="flex:1;background:var(--fill);border:none;color:var(--label-2);font-family:var(--font);font-size:12px;font-weight:600;letter-spacing:.5px;padding:12px;border-radius:100px;cursor:pointer;">Passer</button>
+          <button id="tuto-next" style="flex:2;background:var(--tint);border:none;color:#fff;font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px;border-radius:100px;cursor:pointer;">${current < steps.length - 1 ? 'Suivant →' : 'Commencer'}</button>
         </div>
-      </div>
-    `;
-    document.getElementById('tuto-next').onclick = () => {
-      if(current < steps.length-1) { current++; render(); }
-      else { overlay.remove(); try{localStorage.setItem('tuto_done','1')}catch(e){} }
+      </div>`;
+    $('tuto-next').onclick = () => {
+      if (current < steps.length - 1) { current++; render(); }
+      else { overlay.remove(); try { localStorage.setItem('tuto_done', '1'); } catch(e) {} }
     };
   };
 
   document.body.appendChild(overlay);
-render();
+  render();
 }
+
+// ─── INIT ───
+setTimeout(hideSplash, 1500);
+
+function init() {
+  loadSavedSession();
+  buildSpreads();
+  buildLibrary();
+  buildSpreadsWithDaily();
+
+  const audio = $('bg-audio');
+  audio.volume = 0.35;
+  document.addEventListener('click', () => audio.play().catch(() => {}), { once: true });
+
+  setInterval(() => {
+    const today = new Date().toISOString().split('T')[0];
+    try {
+      const saved = JSON.parse(localStorage.getItem('daily_card') || '{}');
+      if (saved.date !== today) buildSpreadsWithDaily();
+    } catch(e) {}
+  }, 60000);
+
+  // Sync lang buttons dans Moi
+  const pfr = $('pref-lang-fr'); if (pfr) pfr.classList.toggle('active', lang === 'fr');
+  const ppt = $('pref-lang-pt'); if (ppt) ppt.classList.toggle('active', lang === 'pt');
+
+  try {
+    if (!localStorage.getItem('tuto_done')) setTimeout(showTuto, 2000);
+  } catch(e) {}
+}
+
+document.addEventListener('DOMContentLoaded', init);

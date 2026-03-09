@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,9 +9,9 @@
   <link rel="stylesheet" href="css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-
 <body>
 
+<!-- ── SPLASH ── -->
 <div id="splash" onclick="handleSplashClick()">
   <div id="splash-card">
     <div id="splash-card-inner">
@@ -29,183 +28,309 @@
   <canvas id="splash-canvas"></canvas>
 </div>
 
-  <div class="bg-blob2"></div>
+<div class="bg-blob2"></div>
 
-  <audio id="bg-audio" loop muted>
+<audio id="bg-audio" loop muted>
   <source src="audio/ambiance.mp3" type="audio/mpeg">
 </audio>
 
 <button id="theme-btn" onclick="toggleTheme()" title="Thème">☀</button>
 <button id="mute-btn" class="muted" onclick="toggleMute()" title="Musique">♩</button>
 
-  <header>
-    <div class="site-title" id="site-title">
-      <span class="site-title-top">Tarot</span>
-      <span class="site-title-de">do</span>
-      <span class="site-title-bottom">Mēcas</span>
-    </div>
-    <div class="site-sub" id="site-sub" style="display:none"></div>
-    <div class="lang-btn-wrap">
-      <button id="btn-lang-fr" class="active" onclick="setLang('fr')">FR</button>
-      <button id="btn-lang-pt" onclick="setLang('pt')">PT</button>
-    </div>
-  </header>
+<header>
+  <div class="site-title">
+    <span class="site-title-top">Tarot</span>
+    <span class="site-title-de">do</span>
+    <span class="site-title-bottom">Mēcas</span>
+  </div>
+  <div class="lang-btn-wrap">
+    <button id="btn-lang-fr" class="active" onclick="setLang('fr')">FR</button>
+    <button id="btn-lang-pt" onclick="setLang('pt')">PT</button>
+  </div>
+</header>
 
-  <nav>
-    <button class="nav-tab active" onclick="showScreen('tirage',this);goStep1()">Tirage</button>
-    <button class="nav-tab" onclick="showScreen('arcanes',this)">Arcanes</button>
-  </nav>
+<nav>
+  <button class="nav-tab active" onclick="showScreen('accueil',this)" id="nav-accueil">
+    <span class="nav-icon">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 10L10 3l7 7"/><path d="M5 8v9h4v-5h2v5h4V8"/></svg>
+    </span>
+    <span class="nav-label" id="nav-label-accueil">Accueil</span>
+  </button>
+  <button class="nav-tab" onclick="showScreen('tirages',this);goStep1()" id="nav-tirages">
+    <span class="nav-icon">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3" y="4" width="10" height="14" rx="1.5"/><rect x="7" y="2" width="10" height="14" rx="1.5"/></svg>
+    </span>
+    <span class="nav-label" id="nav-label-tirages">Tirages</span>
+  </button>
+  <button class="nav-tab" onclick="showScreen('arcanes',this)" id="nav-arcanes">
+    <span class="nav-icon">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="10" cy="7" r="3"/><path d="M10 10v6"/><path d="M7 12l3 2 3-2"/></svg>
+    </span>
+    <span class="nav-label" id="nav-label-arcanes">Arcanes</span>
+  </button>
+  <button class="nav-tab" onclick="showScreen('moi',this)" id="nav-moi">
+    <span class="nav-icon">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="10" cy="7" r="3"/><path d="M4 17c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+    </span>
+    <span class="nav-label" id="nav-label-moi">Moi</span>
+  </button>
+</nav>
 
-  <!-- ── TIRAGE SCREEN ── -->
-  <div id="screen-tirage" class="screen active">
-    <div class="container">
+<!-- ══════════════════════════════════════ -->
+<!-- ── ACCUEIL SCREEN ── -->
+<!-- ══════════════════════════════════════ -->
+<div id="screen-accueil" class="screen active">
+  <div class="container">
 
-      <!-- Session banner -->
-      <div class="api-banner" id="api-banner">
-        <div class="api-banner-title">Nouvelle session</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <input id="user-name-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="words"
-            spellcheck="false" placeholder="Ton prénom">
-          <textarea id="groq-key-input" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
-            placeholder="Clé Groq — gsk_…"
-            style="font-family:monospace;font-size:12px;height:56px;resize:none;word-break:break-all;"></textarea>
-          <button class="api-btn" onclick="startSession()">Commencer la session →</button>
+    <!-- Carte du jour -->
+    <div id="daily-block-accueil"></div>
+
+    <!-- Tirage rapide -->
+    <div id="quick-reading-block">
+      <p class="section-label" id="quick-label">Tirage rapide</p>
+      <div class="quick-desc" id="quick-desc">3 cartes · Passé · Présent · Futur</div>
+      <button class="btn btn-shuffle" id="btn-quick-shuffle" onclick="quickShuffleAndAnalyze()">
+        Tirer &amp; analyser en un clic →
+      </button>
+      <div id="quick-result" style="display:none;">
+        <div class="spread-visual-container" style="margin-top:16px;">
+          <div class="spread-layout" id="quick-layout" style="display:flex;gap:10px;align-items:center;justify-content:center;"></div>
         </div>
-        <div class="api-note">Clé gratuite sur <a href="https://console.groq.com/keys"
-            target="_blank">console.groq.com</a> · Stockée localement sur cet appareil.</div>
-        <div id="groq-status" class="api-status" style="display:none;"></div>
-      </div>
-
-      <!-- Session bar (active) -->
-      <div id="session-bar" style="display:none;">
-        <div style="font-size:10px;letter-spacing:2px;">SESSION · <span id="session-name"></span></div>
-        <button onclick="endSession()">Terminer la session</button>
-      </div>
-
-      <!-- Step 1 — choose spread -->
-      <div id="step1">
-        <p class="section-label">Choisir un tirage</p>
-        <div class="spreads-list" id="spreads-list"></div>
-      </div>
-
-      <!-- Step 2 — lay cards -->
-      <div id="step2" style="display:none;">
-        <div class="step2-header">
-          <p class="step2-title" id="step2-label"></p>
-          <p class="step2-desc" id="step2-desc"></p>
-          <div class="question-block">
-            <label class="question-label" id="question-label">
-              Ta question <span class="question-optional" id="question-optional">(facultatif)</span>
-            </label>
-            <textarea class="question-input" id="question-input" rows="2"
-              placeholder="Ex : Quelle direction prendre dans ma vie professionnelle ?"></textarea>
-          </div>
-        </div>
-        <button class="btn btn-shuffle" id="btn-shuffle" onclick="shuffleDraw()">Mélanger et tirer les cartes</button>
-        <p class="shuffle-note" id="shuffle-note">Ou appuyez sur chaque carte pour sélectionner manuellement selon votre
-          tirage réel.</p>
-        <div class="spread-visual-container">
-          <div class="spread-layout" id="spread-layout"></div>
-        </div>
-        <div class="positions-list" id="positions-list"></div>
-        <button class="btn" id="btn-analyze" disabled onclick="runAnalysis()">Analyser le tirage →</button>
-        <div style="height:10px;"></div>
-        <button class="btn btn-ghost btn-sm" onclick="goStep1()">← Changer de tirage</button>
-      </div>
-
-      <!-- Step 3 — reading -->
-      <div id="step3" style="display:none;">
-        <div class="analysis-header">
-          <div class="analysis-spread" id="result-title"></div>
-          <div class="analysis-meta" id="result-meta"></div>
-        </div>
-        <div class="analysis-cards" id="result-cards"></div>
-        <div class="reading-result" id="reading-result"></div>
-        <div class="chat-section" id="chat-section" style="display:none;">
+        <div class="reading-result" id="quick-reading-result" style="margin-top:16px;"></div>
+        <div class="chat-section" id="quick-chat-section" style="display:none;margin-top:16px;">
           <div class="chat-header">
-            <div class="chat-header-title">Approfondir</div>
-            <div class="chat-header-desc">Posez une question ou donnez du contexte — l'IA répond en tenant compte de vos
-              cartes.</div>
+            <div class="chat-header-title" id="quick-deepen-title">Approfondir</div>
+            <div class="chat-header-desc" id="quick-deepen-desc">Posez une question sur ce tirage.</div>
           </div>
-          <div class="chat-messages" id="chat-messages"></div>
+          <div class="chat-messages" id="quick-chat-messages"></div>
           <div class="chat-input-area">
-            <textarea class="chat-input" id="chat-input"
-              placeholder="Ex: Cette lecture concerne ma situation professionnelle…" rows="2"
-              onkeydown="chatKeydown(event)"></textarea>
-            <button class="chat-send" id="chat-send" onclick="sendChatMessage()">Envoyer</button>
+            <textarea class="chat-input" id="quick-chat-input" rows="2" placeholder="Votre question…" onkeydown="quickChatKeydown(event)"></textarea>
+            <button class="chat-send" id="quick-chat-send" onclick="sendQuickChatMessage()">Envoyer</button>
           </div>
         </div>
-        <div style="height:24px;"></div>
-        <button class="btn btn-ghost btn-sm" onclick="goStep1()">← Nouveau tirage</button>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ── ARCANES SCREEN ── -->
-  <div id="screen-arcanes" class="screen">
-    <div class="container">
-      <p class="section-label">Les 22 Arcanes Majeurs</p>
-      <div class="lib-grid" id="lib-grid"></div>
-    </div>
-  </div>
-
-  <!-- ── CARD PICKER OVERLAY ── -->
-  <div class="picker-overlay" id="picker-overlay">
-    <div class="picker-modal">
-      <div class="picker-header">
-        <div class="picker-title" id="picker-title">Choisir une carte</div>
-        <button class="picker-close" onclick="closePicker()">✕</button>
-      </div>
-      <div class="picker-grid" id="picker-grid"></div>
-      <div class="picker-footer">
-        <button class="btn btn-ghost btn-sm" onclick="closePicker()">Annuler</button>
       </div>
     </div>
-  </div>
 
-  <!-- ── ARCANE DETAIL MODAL ── -->
-  <div class="modal-overlay" id="modal-overlay" onclick="maybeCloseModal(event)">
-    <div class="modal">
-      <div class="modal-header">
-        <div style="display:flex;align-items:center;gap:16px;flex:1;min-width:0;">
-          <div id="m-svg" class="modal-svg"></div>
-          <div style="min-width:0;">
-            <div class="modal-roman" id="m-roman"></div>
-            <div class="modal-name" id="m-name"></div>
-            <div class="modal-altname" id="m-altname"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- ── TIRAGES SCREEN ── -->
+<!-- ══════════════════════════════════════ -->
+<div id="screen-tirages" class="screen">
+  <div class="container">
+
+    <!-- Step 1 — choose spread -->
+    <div id="step1">
+      <p class="section-label" id="label-choose">Choisir un tirage</p>
+      <div class="spreads-list" id="spreads-list"></div>
+    </div>
+
+    <!-- Step 2 — lay cards -->
+    <div id="step2" style="display:none;">
+      <div class="step2-header">
+        <p class="step2-title" id="step2-label"></p>
+        <p class="step2-desc" id="step2-desc"></p>
+        <div class="question-block">
+          <label class="question-label">
+            Ta question <span class="question-optional" id="question-optional">(facultatif)</span>
+          </label>
+          <textarea class="question-input" id="question-input" rows="2"
+            placeholder="Ex : Quelle direction prendre dans ma vie professionnelle ?"></textarea>
+        </div>
+      </div>
+      <button class="btn btn-shuffle" id="btn-shuffle" onclick="shuffleDraw()">Mélanger et tirer les cartes</button>
+      <p class="shuffle-note" id="shuffle-note">Ou appuyez sur chaque carte pour sélectionner manuellement.</p>
+      <div class="spread-visual-container">
+        <div class="spread-layout" id="spread-layout"></div>
+      </div>
+      <div class="positions-list" id="positions-list"></div>
+      <button class="btn" id="btn-analyze" disabled onclick="runAnalysis()">Analyser le tirage →</button>
+      <div style="height:10px;"></div>
+      <button class="btn btn-ghost btn-sm" onclick="goStep1()">← Changer de tirage</button>
+    </div>
+
+    <!-- Step 3 — reading -->
+    <div id="step3" style="display:none;">
+      <div class="analysis-header">
+        <div class="analysis-spread" id="result-title"></div>
+        <div class="analysis-meta" id="result-meta"></div>
+      </div>
+      <div class="analysis-cards" id="result-cards"></div>
+      <div class="reading-result" id="reading-result"></div>
+      <div class="chat-section" id="chat-section" style="display:none;">
+        <div class="chat-header">
+          <div class="chat-header-title" id="deepen-title">Approfondir</div>
+          <div class="chat-header-desc" id="deepen-desc">Posez une question ou donnez du contexte.</div>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area">
+          <textarea class="chat-input" id="chat-input" rows="2"
+            placeholder="Ex: Cette lecture concerne ma situation professionnelle…"
+            onkeydown="chatKeydown(event)"></textarea>
+          <button class="chat-send" id="chat-send" onclick="sendChatMessage()">Envoyer</button>
+        </div>
+      </div>
+      <div style="height:24px;"></div>
+      <button class="btn btn-ghost btn-sm" onclick="goStep1()">← Nouveau tirage</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- ── ARCANES SCREEN ── -->
+<!-- ══════════════════════════════════════ -->
+<div id="screen-arcanes" class="screen">
+  <div class="container">
+    <p class="section-label" id="label-arcanes">Les 22 Arcanes Majeurs</p>
+    <div class="lib-grid" id="lib-grid"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- ── MOI SCREEN ── -->
+<!-- ══════════════════════════════════════ -->
+<div id="screen-moi" class="screen">
+  <div class="container">
+
+    <!-- Session active bar -->
+    <div id="session-bar" style="display:none;margin-bottom:20px;">
+      <div style="font-size:10px;letter-spacing:2px;">SESSION · <span id="session-name"></span></div>
+      <button onclick="endSession()">Terminer</button>
+    </div>
+
+    <!-- API banner (si pas de session) -->
+    <div class="api-banner" id="api-banner">
+      <div class="api-banner-title" id="api-banner-title">Nouvelle session</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <input id="user-name-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="words"
+          spellcheck="false" placeholder="Ton prénom">
+        <textarea id="groq-key-input" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
+          placeholder="Clé Groq — gsk_…"
+          style="font-family:monospace;font-size:12px;height:56px;resize:none;word-break:break-all;"></textarea>
+        <button class="api-btn" onclick="startSession()" id="btn-start-session">Commencer la session →</button>
+      </div>
+      <div class="api-note" id="api-note">Clé gratuite sur <a href="https://console.groq.com/keys" target="_blank">console.groq.com</a> · Stockée localement sur cet appareil.</div>
+      <div id="groq-status" class="api-status" style="display:none;"></div>
+    </div>
+
+    <!-- Profil & questionnaire -->
+    <div id="profil-block" style="display:none;">
+      <p class="section-label" id="label-profil">Mon profil</p>
+      <div class="profil-card">
+        <div class="profil-field">
+          <label class="profil-label" id="profil-label-age">Âge</label>
+          <input class="profil-input" id="profil-age" type="number" min="1" max="120" placeholder="ex. 32" oninput="saveProfil()">
+        </div>
+        <div class="profil-field">
+          <label class="profil-label" id="profil-label-situation">Situation amoureuse</label>
+          <select class="profil-input" id="profil-situation" onchange="saveProfil()">
+            <option value="">— Choisir —</option>
+            <option value="celibataire">Célibataire</option>
+            <option value="relation">En relation</option>
+            <option value="marie">Marié(e)</option>
+            <option value="separe">Séparé(e)</option>
+            <option value="complique">C'est compliqué</option>
+          </select>
+        </div>
+        <div class="profil-field">
+          <label class="profil-label" id="profil-label-domaine">Domaine prioritaire en ce moment</label>
+          <select class="profil-input" id="profil-domaine" onchange="saveProfil()">
+            <option value="">— Choisir —</option>
+            <option value="amour">Amour & Relations</option>
+            <option value="travail">Travail & Carrière</option>
+            <option value="famille">Famille</option>
+            <option value="spirituel">Spiritualité</option>
+            <option value="sante">Santé</option>
+            <option value="argent">Finances</option>
+            <option value="personnel">Développement personnel</option>
+          </select>
+        </div>
+        <div class="profil-field">
+          <label class="profil-label" id="profil-label-intention">Intention du moment</label>
+          <textarea class="profil-input profil-textarea" id="profil-intention" rows="3"
+            placeholder="Ce que tu traverses en ce moment, en quelques mots…" oninput="saveProfil()"></textarea>
+        </div>
+      </div>
+      <p class="profil-note" id="profil-note-text">Ces informations enrichissent les lectures de l'IA. Elles restent sur cet appareil.</p>
+    </div>
+
+    <!-- Préférences -->
+    <div id="prefs-block" style="display:none;margin-top:28px;">
+      <p class="section-label">Préférences</p>
+      <div class="profil-card">
+        <div class="profil-field" style="flex-direction:row;align-items:center;justify-content:space-between;">
+          <label class="profil-label" style="margin-bottom:0;" id="pref-label-theme">Thème</label>
+          <button onclick="toggleTheme()" class="pref-toggle-btn" id="pref-theme-btn">☀ Clair</button>
+        </div>
+        <div class="profil-field" style="flex-direction:row;align-items:center;justify-content:space-between;border-bottom:none;">
+          <label class="profil-label" style="margin-bottom:0;" id="pref-label-lang">Langue</label>
+          <div class="lang-btn-wrap" style="margin-top:0;">
+            <button id="pref-lang-fr" class="active" onclick="setLang('fr')">FR</button>
+            <button id="pref-lang-pt" onclick="setLang('pt')">PT</button>
           </div>
         </div>
-        <button class="modal-close" onclick="closeModal()">✕</button>
       </div>
-      <div class="modal-body">
-        <div class="modal-sec">
-          <div class="modal-sec-title" id="m-title-kws">Mots-clés</div>
-          <div class="modal-kws" id="m-kws"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── CARD PICKER OVERLAY ── -->
+<div class="picker-overlay" id="picker-overlay">
+  <div class="picker-modal">
+    <div class="picker-header">
+      <div class="picker-title" id="picker-title">Choisir une carte</div>
+      <button class="picker-close" onclick="closePicker()">✕</button>
+    </div>
+    <div class="picker-grid" id="picker-grid"></div>
+    <div class="picker-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closePicker()">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ARCANE DETAIL MODAL ── -->
+<div class="modal-overlay" id="modal-overlay" onclick="maybeCloseModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:16px;flex:1;min-width:0;">
+        <div id="m-svg" class="modal-svg"></div>
+        <div style="min-width:0;">
+          <div class="modal-roman" id="m-roman"></div>
+          <div class="modal-name" id="m-name"></div>
+          <div class="modal-altname" id="m-altname"></div>
         </div>
-        <div class="modal-sec">
-          <div class="modal-sec-title" id="m-title-up">Sens à l'endroit</div>
-          <div class="modal-text" id="m-upright"></div>
-        </div>
-        <div class="modal-sec modal-rev-block">
-          <div class="modal-sec-title" id="m-title-rev">Sens renversé</div>
-          <div class="modal-text" id="m-reversed"></div>
-        </div>
-        <div class="modal-sec">
-          <div class="modal-sec-title" id="m-title-sym">Symbolisme</div>
-          <div class="modal-text" id="m-symbolism"></div>
-        </div>
-        <div class="modal-sec">
-          <div class="modal-sec-title" id="m-title-dom">Domaines</div>
-          <div class="modal-text" id="m-domains"></div>
-        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-sec">
+        <div class="modal-sec-title" id="m-title-kws">Mots-clés</div>
+        <div class="modal-kws" id="m-kws"></div>
+      </div>
+      <div class="modal-sec">
+        <div class="modal-sec-title" id="m-title-up">Sens à l'endroit</div>
+        <div class="modal-text" id="m-upright"></div>
+      </div>
+      <div class="modal-sec modal-rev-block">
+        <div class="modal-sec-title" id="m-title-rev">Sens renversé</div>
+        <div class="modal-text" id="m-reversed"></div>
+      </div>
+      <div class="modal-sec">
+        <div class="modal-sec-title" id="m-title-sym">Symbolisme</div>
+        <div class="modal-text" id="m-symbolism"></div>
+      </div>
+      <div class="modal-sec">
+        <div class="modal-sec-title" id="m-title-dom">Domaines</div>
+        <div class="modal-text" id="m-domains"></div>
       </div>
     </div>
   </div>
+</div>
 
-  <script src="js/data.js"></script>
-  <script src="js/app.js"></script>
-
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
 </body>
-
 </html>
