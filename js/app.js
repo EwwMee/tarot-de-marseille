@@ -1064,59 +1064,35 @@ function startSessionFromAccueil() {
   const ORDER = ['accueil', 'tirages', 'arcanes', 'moi'];
   const NAV_IDS = { accueil: 'nav-accueil', tirages: 'nav-tirages', arcanes: 'nav-arcanes', moi: 'nav-moi' };
 
-  let tx0 = null, ty0 = null;
+  let tx0 = null, ty0 = null, animating = false;
 
   function animateTransition(currentEl, nextEl, direction) {
-    // direction: 1 = glisse vers gauche, -1 = glisse vers droite
-    const dur = 280;
+    if (animating) return;
+    animating = true;
+    const dur = 320;
+    const vw = window.innerWidth;
 
-    nextEl.style.display = 'block';
-    nextEl.style.position = 'fixed';
-    nextEl.style.top = '0';
-    nextEl.style.left = direction === 1 ? '100%' : '-100%';
-    nextEl.style.width = '100%';
-    nextEl.style.height = '100%';
-    nextEl.style.overflowY = 'auto';
-    nextEl.style.zIndex = '50';
-    nextEl.style.transition = 'none';
+    // Les deux écrans visibles simultanément, côte à côte
+    currentEl.style.cssText += ';display:block;position:fixed;top:0;left:0;width:100%;height:100%;overflow-y:auto;z-index:49;will-change:transform;';
+    nextEl.style.cssText += `;display:block;position:fixed;top:0;left:0;width:100%;height:100%;overflow-y:auto;z-index:50;will-change:transform;transform:translateX(${direction > 0 ? vw : -vw}px);`;
 
-    currentEl.style.transition = 'none';
-    currentEl.style.position = 'fixed';
-    currentEl.style.top = '0';
-    currentEl.style.left = '0';
-    currentEl.style.width = '100%';
-    currentEl.style.height = '100%';
-    currentEl.style.overflowY = 'auto';
-    currentEl.style.zIndex = '49';
+    void nextEl.offsetWidth;
 
-    void nextEl.offsetWidth; // force reflow
+    const ease = `transform ${dur}ms cubic-bezier(.25,.46,.45,.94)`;
+    currentEl.style.transition = ease;
+    nextEl.style.transition = ease;
 
-    const translateCurrent = direction === 1 ? '-30%' : '30%';
-    const transition = `transform ${dur}ms cubic-bezier(.4,0,.2,1), opacity ${dur}ms ease`;
-
-    nextEl.style.transition = `left ${dur}ms cubic-bezier(.4,0,.2,1)`;
-    nextEl.style.left = '0';
-
-    currentEl.style.transition = transition;
-    currentEl.style.transform = `translateX(${translateCurrent})`;
-    currentEl.style.opacity = '0.4';
+    currentEl.style.transform = `translateX(${direction > 0 ? -vw * 0.3 : vw * 0.3}px)`;
+    nextEl.style.transform = 'translateX(0)';
 
     setTimeout(() => {
-      // Nettoyer
+      animating = false;
       currentEl.classList.remove('active');
       nextEl.classList.add('active');
 
-      [currentEl, nextEl].forEach(el => {
-        el.style.position = '';
-        el.style.top = '';
-        el.style.left = '';
-        el.style.width = '';
-        el.style.height = '';
-        el.style.overflowY = '';
-        el.style.zIndex = '';
-        el.style.transition = '';
-        el.style.transform = '';
-        el.style.opacity = '';
+      ['position','top','left','width','height','overflow-y','z-index','will-change','transform','transition'].forEach(p => {
+        currentEl.style.removeProperty(p);
+        nextEl.style.removeProperty(p);
       });
 
       window.scrollTo(0, 0);
@@ -1124,19 +1100,20 @@ function startSessionFromAccueil() {
   }
 
   document.addEventListener('touchstart', e => {
-    if (e.target.closest('.picker-overlay, .modal-overlay, #tuto-overlay, .chat-messages, .spread-visual-container')) return;
+    if (animating) return;
+    if (e.target.closest('.picker-overlay,.modal-overlay,#tuto-overlay,.chat-messages,.spread-visual-container')) return;
     if (e.touches.length !== 1) return;
     tx0 = e.touches[0].clientX;
     ty0 = e.touches[0].clientY;
   }, { passive: true });
 
   document.addEventListener('touchend', e => {
-    if (tx0 === null) return;
+    if (tx0 === null || animating) return;
     const dx = e.changedTouches[0].clientX - tx0;
     const dy = e.changedTouches[0].clientY - ty0;
     tx0 = null; ty0 = null;
 
-    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    if (Math.abs(dx) < 52 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
 
     const active = document.querySelector('.screen.active');
     if (!active) return;
@@ -1150,11 +1127,9 @@ function startSessionFromAccueil() {
 
     const nextId = ORDER[nextIdx];
     const btn = $(NAV_IDS[nextId]);
-    if (!btn) return;
-
     const nextEl = document.getElementById('screen-' + nextId);
+    if (!btn || !nextEl) return;
 
-    // Mettre à jour nav
     document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     if (nextId === 'tirages') goStep1();
