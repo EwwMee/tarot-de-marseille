@@ -1152,7 +1152,7 @@ async function generateSuggestions(history, inputId, sendFnName) {
         style="background:var(--tint-bg);border:1px solid rgba(201,120,50,.2);border-radius:20px;padding:6px 12px;font-family:var(--font);font-size:12px;font-weight:500;color:var(--tint);cursor:pointer;white-space:nowrap;">${q}</button>`
     ).join('');
   } catch(e) {
-    block.remove();
+    block.innerHTML = `<div style="font-size:11px;color:var(--label-3);padding:4px 8px;">${e.message}</div>`;
   }
 }
 
