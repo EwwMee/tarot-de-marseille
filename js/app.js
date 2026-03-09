@@ -990,6 +990,7 @@ function showTuto() {
 }
 
 // ─── INIT ───
+cleanScreenStyles();
 setTimeout(hideSplash, 1500);
 
 function init() {
@@ -1123,3 +1124,11 @@ block.addEventListener('mousemove', e => {
   block.scrollLeft = scrollLeft - (e.pageX - block.offsetLeft - startX);
 });
 block.addEventListener('wheel', e => { e.preventDefault(); block.scrollLeft += e.deltaY; }, { passive: false });
+
+function cleanScreenStyles() {
+  document.querySelectorAll('.screen').forEach(el => {
+    ['position','top','left','width','height','overflow-y','z-index','will-change','transform','transition','display'].forEach(p => {
+      el.style.removeProperty(p);
+    });
+  });
+}
