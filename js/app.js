@@ -1065,61 +1065,6 @@ function startSessionFromAccueil() {
   }, 1000);
 }
 
-// ─── SWIPE INTER-PAGES ───
-(function() {
-  const ORDER = ['accueil', 'tirages', 'arcanes', 'moi'];
-  const NAV_IDS = { accueil: 'nav-accueil', tirages: 'nav-tirages', arcanes: 'nav-arcanes', moi: 'nav-moi' };
-
-  let tx0 = null, ty0 = null, animating = false;
-
-  function animateTransition(currentEl, nextEl, direction) {
-    if (animating) return;
-    animating = true;
-    currentEl.classList.remove('active');
-    nextEl.classList.add('active');
-    window.scrollTo(0, 0);
-    animating = false;
-  }
-
-  document.addEventListener('touchstart', e => {
-    if (animating) return;
-    if (e.target.closest('.picker-overlay,.modal-overlay,#tuto-overlay,.chat-messages,.spread-visual-container')) return;
-    if (e.touches.length !== 1) return;
-    tx0 = e.touches[0].clientX;
-    ty0 = e.touches[0].clientY;
-  }, { passive: true });
-
-  document.addEventListener('touchend', e => {
-    if (tx0 === null || animating) return;
-    const dx = e.changedTouches[0].clientX - tx0;
-    const dy = e.changedTouches[0].clientY - ty0;
-    tx0 = null; ty0 = null;
-
-    if (Math.abs(dx) < 52 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
-
-    const active = document.querySelector('.screen.active');
-    if (!active) return;
-    const currentId = active.id.replace('screen-', '');
-    const idx = ORDER.indexOf(currentId);
-    if (idx === -1) return;
-
-    const direction = dx < 0 ? 1 : -1;
-    const nextIdx = idx + direction;
-    if (nextIdx < 0 || nextIdx >= ORDER.length) return;
-
-    const nextId = ORDER[nextIdx];
-    const btn = $(NAV_IDS[nextId]);
-    const nextEl = document.getElementById('screen-' + nextId);
-    if (!btn || !nextEl) return;
-
-    document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    if (nextId === 'tirages') goStep1();
-
-    animateTransition(active, nextEl, direction);
-  }, { passive: true });
-})();
-
 // ─── SUGGESTIONS ───
 async function generateSuggestions(history, inputId, sendFnName) {
   const existingBlock = document.querySelector('.suggestions-row');
