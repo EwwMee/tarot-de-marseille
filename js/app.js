@@ -1075,34 +1075,10 @@ function startSessionFromAccueil() {
   function animateTransition(currentEl, nextEl, direction) {
     if (animating) return;
     animating = true;
-    const dur = 320;
-    const vw = window.innerWidth;
-
-    // Les deux écrans visibles simultanément, côte à côte
-    currentEl.style.cssText += ';display:block;position:fixed;top:0;left:0;width:100%;height:100%;overflow-y:auto;z-index:49;will-change:transform;';
-    nextEl.style.cssText += `;display:block;position:fixed;top:0;left:0;width:100%;height:100%;overflow-y:auto;z-index:50;will-change:transform;transform:translateX(${direction > 0 ? vw : -vw}px);`;
-
-    void nextEl.offsetWidth;
-
-    const ease = `transform ${dur}ms cubic-bezier(.25,.46,.45,.94)`;
-    currentEl.style.transition = ease;
-    nextEl.style.transition = ease;
-
-    currentEl.style.transform = `translateX(${direction > 0 ? -vw * 0.3 : vw * 0.3}px)`;
-    nextEl.style.transform = 'translateX(0)';
-
-    setTimeout(() => {
-      animating = false;
-      currentEl.classList.remove('active');
-      nextEl.classList.add('active');
-
-      ['position','top','left','width','height','overflow-y','z-index','will-change','transform','transition'].forEach(p => {
-        currentEl.style.removeProperty(p);
-        nextEl.style.removeProperty(p);
-      });
-
-      window.scrollTo(0, 0);
-    }, dur);
+    currentEl.classList.remove('active');
+    nextEl.classList.add('active');
+    window.scrollTo(0, 0);
+    animating = false;
   }
 
   document.addEventListener('touchstart', e => {
@@ -1144,7 +1120,6 @@ function startSessionFromAccueil() {
   }, { passive: true });
 })();
 
-// ─── SUGGESTIONS ───
 // ─── SUGGESTIONS ───
 async function generateSuggestions(history, inputId, sendFnName) {
   const existingBlock = document.querySelector('.suggestions-row');
