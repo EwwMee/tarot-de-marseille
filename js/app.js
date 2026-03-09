@@ -1066,8 +1066,64 @@ function startSessionFromAccueil() {
 
   let tx0 = null, ty0 = null;
 
+  function animateTransition(currentEl, nextEl, direction) {
+    // direction: 1 = glisse vers gauche, -1 = glisse vers droite
+    const dur = 280;
+
+    nextEl.style.display = 'block';
+    nextEl.style.position = 'fixed';
+    nextEl.style.top = '0';
+    nextEl.style.left = direction === 1 ? '100%' : '-100%';
+    nextEl.style.width = '100%';
+    nextEl.style.height = '100%';
+    nextEl.style.overflowY = 'auto';
+    nextEl.style.zIndex = '50';
+    nextEl.style.transition = 'none';
+
+    currentEl.style.transition = 'none';
+    currentEl.style.position = 'fixed';
+    currentEl.style.top = '0';
+    currentEl.style.left = '0';
+    currentEl.style.width = '100%';
+    currentEl.style.height = '100%';
+    currentEl.style.overflowY = 'auto';
+    currentEl.style.zIndex = '49';
+
+    void nextEl.offsetWidth; // force reflow
+
+    const translateCurrent = direction === 1 ? '-30%' : '30%';
+    const transition = `transform ${dur}ms cubic-bezier(.4,0,.2,1), opacity ${dur}ms ease`;
+
+    nextEl.style.transition = `left ${dur}ms cubic-bezier(.4,0,.2,1)`;
+    nextEl.style.left = '0';
+
+    currentEl.style.transition = transition;
+    currentEl.style.transform = `translateX(${translateCurrent})`;
+    currentEl.style.opacity = '0.4';
+
+    setTimeout(() => {
+      // Nettoyer
+      currentEl.classList.remove('active');
+      nextEl.classList.add('active');
+
+      [currentEl, nextEl].forEach(el => {
+        el.style.position = '';
+        el.style.top = '';
+        el.style.left = '';
+        el.style.width = '';
+        el.style.height = '';
+        el.style.overflowY = '';
+        el.style.zIndex = '';
+        el.style.transition = '';
+        el.style.transform = '';
+        el.style.opacity = '';
+      });
+
+      window.scrollTo(0, 0);
+    }, dur);
+  }
+
   document.addEventListener('touchstart', e => {
-    // Ne pas interférer avec les overlays/modals/picker/scroll interne
     if (e.target.closest('.picker-overlay, .modal-overlay, #tuto-overlay, .chat-messages, .spread-visual-container')) return;
     if (e.touches.length !== 1) return;
     tx0 = e.touches[0].clientX;
@@ -1088,14 +1144,21 @@ function startSessionFromAccueil() {
     const idx = ORDER.indexOf(currentId);
     if (idx === -1) return;
 
-    const nextIdx = dx < 0 ? idx + 1 : idx - 1;
+    const direction = dx < 0 ? 1 : -1;
+    const nextIdx = idx + direction;
     if (nextIdx < 0 || nextIdx >= ORDER.length) return;
 
     const nextId = ORDER[nextIdx];
     const btn = $(NAV_IDS[nextId]);
     if (!btn) return;
 
-    if (nextId === 'tirages') { showScreen('tirages', btn); goStep1(); }
-    else showScreen(nextId, btn);
+    const nextEl = document.getElementById('screen-' + nextId);
+
+    // Mettre à jour nav
+    document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (nextId === 'tirages') goStep1();
+
+    animateTransition(active, nextEl, direction);
   }, { passive: true });
 })();
