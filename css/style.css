@@ -2386,12 +2386,13 @@ header { margin-left: 72px; }
   #lang-btn  { bottom: calc(116px + 60px + env(safe-area-inset-bottom)); }
   #lang-menu { bottom: calc(164px + 60px + env(safe-area-inset-bottom)); }
 
-  .nav-tab.active { background: none; }
+ .nav-tab.active { background: none !important; }
+
   .nav-tab.active::after {
     content: '';
     position: absolute;
-    top: 6px;
-    right: 8px;
+    top: 7px;
+    right: calc(50% - 15px);  /* collé en haut à droite de l'icône centrée */
     width: 5px;
     height: 5px;
     border-radius: 50%;
