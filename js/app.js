@@ -1058,3 +1058,44 @@ function startSessionFromAccueil() {
     }, 1200);
   }, 1000);
 }
+
+// ─── SWIPE INTER-PAGES ───
+(function() {
+  const ORDER = ['accueil', 'tirages', 'arcanes', 'moi'];
+  const NAV_IDS = { accueil: 'nav-accueil', tirages: 'nav-tirages', arcanes: 'nav-arcanes', moi: 'nav-moi' };
+
+  let tx0 = null, ty0 = null;
+
+  document.addEventListener('touchstart', e => {
+    // Ne pas interférer avec les overlays/modals/picker/scroll interne
+    if (e.target.closest('.picker-overlay, .modal-overlay, #tuto-overlay, .chat-messages, .spread-visual-container')) return;
+    if (e.touches.length !== 1) return;
+    tx0 = e.touches[0].clientX;
+    ty0 = e.touches[0].clientY;
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (tx0 === null) return;
+    const dx = e.changedTouches[0].clientX - tx0;
+    const dy = e.changedTouches[0].clientY - ty0;
+    tx0 = null; ty0 = null;
+
+    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+
+    const active = document.querySelector('.screen.active');
+    if (!active) return;
+    const currentId = active.id.replace('screen-', '');
+    const idx = ORDER.indexOf(currentId);
+    if (idx === -1) return;
+
+    const nextIdx = dx < 0 ? idx + 1 : idx - 1;
+    if (nextIdx < 0 || nextIdx >= ORDER.length) return;
+
+    const nextId = ORDER[nextIdx];
+    const btn = $(NAV_IDS[nextId]);
+    if (!btn) return;
+
+    if (nextId === 'tirages') { showScreen('tirages', btn); goStep1(); }
+    else showScreen(nextId, btn);
+  }, { passive: true });
+})();
