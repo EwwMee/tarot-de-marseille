@@ -464,7 +464,6 @@ async function runAnalysis() {
   chatHistory = [];
   $('chat-section').style.display = 'none';
   $('chat-messages').innerHTML = '';
-  window.scrollTo(0, 0);
 
   const revCount = slots.filter(s => s.reversed).length;
   $('result-title').textContent = selectedSpread.name;
@@ -673,6 +672,8 @@ function toggleMute() {
     btn.classList.remove('playing');
     btn.textContent = '♩';
   }
+  const ico = $('drawer-mute-icon');
+if (ico) ico.textContent = $('bg-audio').muted ? '♩' : '♪';
 }
 
 function handleSplashClick() {
@@ -722,6 +723,10 @@ function toggleTheme() {
   const tb = $('theme-btn'); if (tb) tb.textContent = dark ? '☾' : '☀';
   try { localStorage.setItem('tarot_theme', dark ? 'dark' : 'light'); } catch(e) {}
   updatePrefsThemeBtn();
+  const lbl = $('drawer-theme-label');
+if (lbl) lbl.textContent = document.body.classList.contains('dark') ? 'Thème sombre' : 'Thème clair';
+const ico = $('drawer-theme-icon');
+if (ico) ico.textContent = document.body.classList.contains('dark') ? '☾' : '☀';
 }
 
 // ─── DAILY CARD ───
@@ -946,8 +951,22 @@ async function quickShuffleAndAnalyze() {
     resultEl.innerHTML = `<div class="error-block"><div class="error-text">Erreur : ${err.message}</div></div>`;
   }
 
-  btn.disabled = false;
-  btn.textContent = 'Nouveau tirage →';
+  btn.style.display = 'none';
+  
+  const newBtn = document.createElement('button');
+  newBtn.className = 'btn btn-shuffle';
+  newBtn.textContent = 'Nouveau tirage →';
+  newBtn.onclick = () => {
+    newBtn.remove();
+    btn.style.display = '';
+    btn.disabled = false;
+    btn.textContent = 'Tirer & analyser en un clic →';
+    $('quick-result').style.display = 'none';
+  };
+  $('quick-reading-result').insertAdjacentElement('afterend', newBtn);
+  newBtn.className = 'btn btn-shuffle';
+  newBtn.textContent = 'Nouveau tirage →';
+  newBtn.style.margin = '16px 0 -8px 0';
 }
 
 // ─── TUTO ───
@@ -1085,7 +1104,7 @@ async function generateSuggestions(history, inputId, sendFnName) {
   try {
     const raw = await callGroq([
       ...history,
-      { role: 'user', content: 'Génère exactement 3 questions très courtes (max 6 mots chacune) pour approfondir. Une par ligne, sans numéro, sans tiret.' }
+      { role: 'user', content: 'Génère exactement 3 questions très courtes (max 6 mots chacune) à la première personne (ex: "Comment améliorer ma situation ?") pour approfondir. Une par ligne, sans numéro, sans tiret.' }
     ]);
 
     const questions = raw.split('\n')
@@ -1112,19 +1131,6 @@ function useSuggestion(question, inputId, sendFnName) {
   else sendQuickChatMessage();
 }
 
-block.style.cssText = 'display:flex;flex-wrap:nowrap;gap:6px;padding:10px 16px;border-top:1px solid rgba(255,255,255,.4);overflow:scroll;';
-
-let isDown = false, startX, scrollLeft;
-block.addEventListener('mousedown', e => { isDown = true; startX = e.pageX - block.offsetLeft; scrollLeft = block.scrollLeft; });
-block.addEventListener('mouseleave', () => isDown = false);
-block.addEventListener('mouseup', () => isDown = false);
-block.addEventListener('mousemove', e => {
-  if (!isDown) return;
-  e.preventDefault();
-  block.scrollLeft = scrollLeft - (e.pageX - block.offsetLeft - startX);
-});
-block.addEventListener('wheel', e => { e.preventDefault(); block.scrollLeft += e.deltaY; }, { passive: false });
-
 function cleanScreenStyles() {
   document.querySelectorAll('.screen').forEach(el => {
     ['position','top','left','width','height','overflow-y','z-index','will-change','transform','transition','display'].forEach(p => {
@@ -1132,3 +1138,21 @@ function cleanScreenStyles() {
     });
   });
 }
+
+function toggleSettingsDrawer() {
+  const d = $('settings-drawer');
+  d.style.display = d.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleLangInDrawer() {
+  const newLang = lang === 'fr' ? 'pt' : 'fr';
+  setLang(newLang);
+  $('drawer-lang-label').textContent = newLang === 'fr' ? 'Français' : 'Português';
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#settings-drawer') && !e.target.closest('#settings-trigger')) {
+    const d = $('settings-drawer');
+    if (d) d.style.display = 'none';
+  }
+});
