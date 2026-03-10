@@ -564,6 +564,9 @@ async function sendChatMessage() {
   try {
     const raw = await callGroq(chatHistory);
     $(tid)?.remove();
+    const msgs = $('chat-messages').querySelectorAll('.chat-msg.user');
+    const lastUserMsg = msgs[msgs.length - 1];
+    if (lastUserMsg) lastUserMsg.scrollIntoView({ behavior: 'smooth' });
     appendChatMsg('ai', raw, 'chat-messages');
     chatHistory.push({ role: 'assistant', content: raw });
   } catch (err) {
@@ -598,8 +601,11 @@ async function sendQuickChatMessage() {
   try {
     const raw = await callGroq(quickChatHistory);
     $(tid)?.remove();
+    const msgs = $('quick-chat-messages').querySelectorAll('.chat-msg.user');
+    const lastUserMsg = msgs[msgs.length - 1];
+    if (lastUserMsg) lastUserMsg.scrollIntoView({ behavior: 'smooth' });
     appendChatMsg('ai', raw, 'quick-chat-messages');
-    quickChatHistory.push({ role: 'assistant', content: raw });
+    
   } catch (err) {
     $(tid)?.remove();
     appendChatMsg('ai', err.message, 'quick-chat-messages');
@@ -615,7 +621,7 @@ function appendChatMsg(role, text, containerId) {
   el.className = `chat-msg ${role}`;
   el.innerHTML = `<div class="chat-msg-role">${role === 'user' ? t().you : t().ai}</div><div class="chat-msg-text">${fmt(text)}</div>`;
   container.appendChild(el);
-  scrollChat(containerId || 'chat-messages');
+  if (role !== 'ai') scrollChat(containerId || 'chat-messages');
 }
 
 function scrollChat(id) {
