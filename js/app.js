@@ -913,15 +913,69 @@ async function quickShuffleAndAnalyze() {
     </div>`;
   }).join('');
 
-  // Animation d'apparition
+  // Animation mélange
+  layout.innerHTML = '';
+  layout.style.position = 'relative';
+  layout.style.minHeight = '126px';
+
+  const cx = layout.offsetWidth / 2 - 39;
+  const cy = 0;
+  const cardA = document.createElement('div');
+  const cardB = document.createElement('div');
+  [cardA, cardB].forEach((c, ii) => {
+    c.className = 'vcard filled';
+    c.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:100%;">
+      <span style="font-family:var(--font);font-size:6.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tint);">TAROT</span>
+      <span style="font-family:var(--font);font-size:5.5px;font-weight:400;letter-spacing:2.5px;text-transform:uppercase;color:var(--tint);opacity:.6;">do</span>
+      <span style="font-family:var(--font);font-size:6.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tint);">MĒCAS</span>
+    </div>`;
+    c.style.cssText = `position:absolute;left:${cx}px;top:${cy}px;pointer-events:none;z-index:${ii+2};opacity:0;transition:opacity .15s;`;
+    layout.appendChild(c);
+  });
+
+  setTimeout(() => { cardA.style.opacity = '1'; cardB.style.opacity = '1'; }, 50);
+
+  const passes = 6, passDur = 280;
+  for (let p = 0; p < passes; p++) {
+    const even = p % 2 === 0;
+    setTimeout(() => {
+      cardA.style.transition = `transform ${passDur}ms cubic-bezier(.4,0,.2,1)`;
+      cardB.style.transition = `transform ${passDur}ms cubic-bezier(.4,0,.2,1)`;
+      const offset = 12, rot = 8;
+      if (even) {
+        cardA.style.transform = `translateX(${offset}px) rotate(${rot}deg)`; cardA.style.zIndex = '5';
+        cardB.style.transform = `translateX(-${offset}px) rotate(-${rot}deg)`; cardB.style.zIndex = '4';
+      } else {
+        cardA.style.transform = `translateX(-${offset}px) rotate(-${rot}deg)`; cardA.style.zIndex = '4';
+        cardB.style.transform = `translateX(${offset}px) rotate(${rot}deg)`; cardB.style.zIndex = '5';
+      }
+    }, p * passDur);
+  }
+
+  const totalDur = passes * passDur + 200;
   setTimeout(() => {
-    layout.querySelectorAll('.vcard').forEach((el, i) => {
-      el.style.opacity = '0'; el.style.transform = 'translateY(-12px) scale(.95)'; el.style.transition = 'none';
-      void el.offsetWidth;
-      el.style.transition = `opacity .3s ${i * 80}ms ease, transform .3s ${i * 80}ms cubic-bezier(.34,1.4,.64,1)`;
-      el.style.opacity = '1'; el.style.transform = 'translateY(0) scale(1)';
-    });
-  }, 50);
+    cardA.style.opacity = '0'; cardB.style.opacity = '0';
+    setTimeout(() => { cardA.remove(); cardB.remove(); layout.style.position = ''; layout.style.minHeight = ''; }, 200);
+
+    layout.innerHTML = quickSlots.map((slot, i) => {
+      const a = ARCANES[slot.arcanaIndex];
+      return `<div class="vcard filled${slot.reversed ? ' reversed-v' : ''}" style="cursor:default;">
+        ${slot.reversed ? '<div class="vcard-rev-mark">↑</div>' : ''}
+        <div class="vcard-num">${a.roman}</div>
+        <div class="vcard-svg">${ARCANA_SVG[slot.arcanaIndex]}</div>
+        <div class="vcard-name">${a.name}</div>
+      </div>`;
+    }).join('');
+
+    setTimeout(() => {
+      layout.querySelectorAll('.vcard').forEach((el, i) => {
+        el.style.opacity = '0'; el.style.transform = 'translateY(-12px) scale(.95)'; el.style.transition = 'none';
+        void el.offsetWidth;
+        el.style.transition = `opacity .3s ${i * 80}ms ease, transform .3s ${i * 80}ms cubic-bezier(.34,1.4,.64,1)`;
+        el.style.opacity = '1'; el.style.transform = 'translateY(0) scale(1)';
+      });
+    }, 50);
+  }, totalDur);
 
   // Générer la lecture
   const resultEl = $('quick-reading-result');
