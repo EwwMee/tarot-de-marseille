@@ -34,18 +34,9 @@
   <source src="audio/ambiance.mp3" type="audio/mpeg">
 </audio>
 
-<button id="theme-btn" onclick="toggleTheme()" title="Thème">☀</button>
-<button id="mute-btn" class="muted" onclick="toggleMute()" title="Musique">♩</button>
-
-<header>
-  <div class="site-title">
-    <span class="site-title-top">Tarot</span>
-    <span class="site-title-de">do</span>
-    <span class="site-title-bottom">Mēcas</span>
-  </div>
-</header>
-
-<button id="lang-btn" onclick="toggleLangMenu()" title="Langue" style="position:fixed;bottom:116px;right:20px;z-index:100;width:40px;height:40px;border-radius:50%;border:1px solid var(--glass-border-outer);background:var(--glass-bg);backdrop-filter:var(--blur-sm);-webkit-backdrop-filter:var(--blur-sm);color:var(--tint);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+<button id="theme-btn" style="display:none;" onclick="toggleTheme()" title="Thème">☀</button>
+<button id="mute-btn" style="display:none;" class="muted" onclick="toggleMute()" title="Musique">♩</button>
+<button id="lang-btn" onclick="toggleLangMenu()" title="Langue">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
 </button>
 <div id="lang-menu" style="display:none;position:fixed;bottom:164px;right:16px;z-index:101;background:var(--glass-bg-strong);backdrop-filter:var(--blur);border:1px solid var(--glass-border-outer);border-radius:var(--r-lg);padding:12px 16px;box-shadow:var(--glass-shadow-md);min-width:200px;">
@@ -56,6 +47,14 @@
   </div>
   <div style="font-size:11px;color:var(--label-3);line-height:1.6;">Pour le moment, seules ces deux langues sont disponibles.</div>
 </div>
+
+<header>
+  <div class="site-title">
+    <span class="site-title-top">Tarot</span>
+    <span class="site-title-de">do</span>
+    <span class="site-title-bottom">Mēcas</span>
+  </div>
+</header>
 
 <nav>
   <button class="nav-tab active" onclick="showScreen('accueil',this);window.scrollTo(0,0);" id="nav-accueil">
@@ -345,5 +344,8 @@
 
 <script src="js/data.js"></script>
 <script src="js/app.js"></script>
+
+<button id="settings-trigger" onclick="document.body.classList.toggle('settings-open')">· · ·</button>
+
 </body>
 </html>

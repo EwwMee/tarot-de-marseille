@@ -1211,8 +1211,11 @@ function toggleLangInDrawer() {
 }
 
 document.addEventListener('click', e => {
-  if (!e.target.closest('#settings-drawer') && !e.target.closest('#settings-trigger')) {
-    const d = $('settings-drawer');
-    if (d) d.style.display = 'none';
+  if (!e.target.closest('#settings-trigger') && 
+      !e.target.closest('#mute-btn') && 
+      !e.target.closest('#theme-btn') && 
+      !e.target.closest('#lang-btn') &&
+      !e.target.closest('#lang-menu')) {
+    document.body.classList.remove('settings-open');
   }
 });
