@@ -893,7 +893,7 @@ if (bannerAccueil) {
 
 // ─── TIRAGE RAPIDE ───
 async function quickShuffleAndAnalyze() {
-  document.querySelectorAll('.btn-shuffle').forEach(b => { if (b.id !== 'btn-quick-shuffle') b.remove(); });
+  document.querySelectorAll('.btn-shuffle').forEach(b => { if (!b.id) b.remove(); });
   
   if (!groqKey) {
     showScreen('moi', $('nav-moi'));
