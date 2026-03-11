@@ -243,6 +243,7 @@ function goStep1() {
 
 // ─── SHUFFLE ANIMATION ───
 function shuffleDraw() {
+  $('spread-layout').scrollIntoView({ behavior: 'smooth', block: 'start' });
   const layout = $('spread-layout');
   const vcards = Array.from(layout.querySelectorAll('.vcard'));
   if (!vcards.length) return;
@@ -296,17 +297,22 @@ function shuffleDraw() {
       [indices[i], indices[j]] = [indices[j], indices[i]];
     }
     slots = indices.slice(0, n).map(idx => ({ arcanaIndex: idx, reversed: Math.random() < .3 }));
+    const scrollY = window.scrollY;
     renderAll();
+    window.scrollTo(0, scrollY);
 
     setTimeout(() => {
-      document.querySelectorAll('#spread-layout .vcard.filled').forEach((el, i) => {
-        el.style.opacity = '0'; el.style.transform = 'translateY(-16px) scale(.95)'; el.style.transition = 'none';
-        void el.offsetWidth;
-        el.style.transition = `opacity .3s ${i * 55}ms ease, transform .3s ${i * 55}ms cubic-bezier(.34,1.4,.64,1)`;
-        el.style.opacity = '1'; el.style.transform = 'translateY(0) scale(1)';
-        setTimeout(() => { el.style.transition = ''; el.style.transform = ''; el.style.opacity = ''; }, i * 55 + 350);
-      });
-    }, 50);
+  const filled = document.querySelectorAll('#spread-layout .vcard.filled');
+  filled.forEach((el, i) => {
+    el.style.opacity = '0'; el.style.transform = 'translateY(-16px) scale(.95)'; el.style.transition = 'none';
+    void el.offsetWidth;
+    el.style.transition = `opacity .3s ${i * 55}ms ease, transform .3s ${i * 55}ms cubic-bezier(.34,1.4,.64,1)`;
+    el.style.opacity = '1'; el.style.transform = 'translateY(0) scale(1)';
+    const delay = i * 55 + 350;
+    setTimeout(() => { el.style.transition = ''; el.style.transform = ''; el.style.opacity = ''; }, delay);
+  });
+  $('spread-layout').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}, 50);
   }, totalDur);
 }
 
@@ -459,6 +465,7 @@ function toggleReversed(e, i) {
 
 // ─── ANALYSIS ───
 async function runAnalysis() {
+  $('reading-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
   $('step2').style.display = 'none';
   $('step3').style.display = 'block';
   chatHistory = [];
@@ -493,7 +500,11 @@ async function runAnalysis() {
 
   try {
     const raw = await callGroq([{ role: 'system', content: sysPrompt }, { role: 'user', content: userPrompt }]);
+    console.log('avant render:', window.scrollY);
     renderReading(raw);
+    console.log('après render:', window.scrollY);
+    setTimeout(() => console.log('après 100ms:', window.scrollY), 100);
+    setTimeout(() => console.log('après 500ms:', window.scrollY), 500);
     chatHistory = [
       { role: 'system', content: sysPrompt },
       { role: 'user', content: userPrompt },
@@ -501,6 +512,11 @@ async function runAnalysis() {
     ];
     $('chat-section').style.display = 'block';
     generateSuggestions(chatHistory, 'chat-input', 'sendChatMessage');
+    setTimeout(() => {
+      const el = $('reading-result');
+      const y = el.getBoundingClientRect().top + window.scrollY - 20;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }, 100);
   } catch (err) {
     $('reading-result').innerHTML = `<div class="error-block"><div class="error-text">Erreur : ${err.message}</div></div>`;
   }
@@ -877,6 +893,7 @@ if (bannerAccueil) {
 
 // ─── TIRAGE RAPIDE ───
 async function quickShuffleAndAnalyze() {
+  
   if (!groqKey) {
     showScreen('moi', $('nav-moi'));
     return;
@@ -888,6 +905,7 @@ async function quickShuffleAndAnalyze() {
 
   const quickResult = $('quick-result');
   quickResult.style.display = 'block';
+  setTimeout(() => $('quick-layout').scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
   $('quick-chat-section').style.display = 'none';
   $('quick-chat-messages').innerHTML = '';
   quickChatHistory = [];
@@ -974,6 +992,7 @@ async function quickShuffleAndAnalyze() {
         el.style.transition = `opacity .3s ${i * 80}ms ease, transform .3s ${i * 80}ms cubic-bezier(.34,1.4,.64,1)`;
         el.style.opacity = '1'; el.style.transform = 'translateY(0) scale(1)';
       });
+      setTimeout(() => $('quick-layout').scrollIntoView({ behavior: 'smooth', block: 'center' }), 0);
     }, 50);
   }, totalDur);
 
@@ -1016,12 +1035,12 @@ async function quickShuffleAndAnalyze() {
   const newBtn = document.createElement('button');
   newBtn.className = 'btn btn-shuffle';
   newBtn.textContent = 'Nouveau tirage →';
+  newBtn.style.margin = '16px 0 0 0';
+  newBtn.style.marginBottom = '-8px';
   newBtn.onclick = () => {
     newBtn.remove();
-    btn.style.display = '';
-    btn.disabled = false;
-    btn.textContent = 'Tirer & analyser en un clic →';
-    $('quick-result').style.display = 'none';
+    $('quick-layout').scrollIntoView({ behavior: 'instant', block: 'center' });
+    quickShuffleAndAnalyze();
   };
   $('quick-reading-result').insertAdjacentElement('afterend', newBtn);
   newBtn.className = 'btn btn-shuffle';
