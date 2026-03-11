@@ -893,6 +893,7 @@ if (bannerAccueil) {
 
 // ─── TIRAGE RAPIDE ───
 async function quickShuffleAndAnalyze() {
+  document.querySelectorAll('.btn-shuffle').forEach(b => { if (b.id !== 'btn-quick-shuffle') b.remove(); });
   
   if (!groqKey) {
     showScreen('moi', $('nav-moi'));
@@ -1238,3 +1239,12 @@ document.addEventListener('click', e => {
     document.body.classList.remove('settings-open');
   }
 });
+
+function resetAccueil() {
+  $('quick-result').style.display = 'none';
+  $('btn-quick-shuffle').style.display = '';
+  $('btn-quick-shuffle').disabled = false;
+  $('btn-quick-shuffle').textContent = 'Tirer & analyser en un clic →';
+  quickChatHistory = [];
+  window.scrollTo(0, 0);
+}
