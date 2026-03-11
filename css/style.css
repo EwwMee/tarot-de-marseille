@@ -38,15 +38,6 @@ body.dark {
   --separator-strong: rgba(201,120,50,.15);
   background: #12100e;
 }
-body.dark::before {
-  background: #12100e;
-}
-body.dark::after {
-  background: radial-gradient(ellipse at center, rgba(80,40,10,.5) 0%, transparent 70%);
-}
-body.dark .bg-blob2 {
-  background: radial-gradient(ellipse at center, rgba(60,30,8,.4) 0%, transparent 70%);
-}
 body.dark nav {
   background: rgba(20,16,12,.8);
   border-top-color: rgba(201,120,50,.15);
@@ -104,105 +95,6 @@ body {
   min-height: 100vh;
 }
 
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-  background: #eef4fb;
-}
-
-body::after {
-  content: '';
-  position: fixed;
-  z-index: -1;
-  width: 70vw;
-  height: 70vw;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(180, 215, 248, .7) 0%, rgba(180, 215, 248, .3) 40%, transparent 70%);
-  filter: blur(40px);
-  top: -10vw;
-  left: -10vw;
-  animation: blob1 14s ease-in-out infinite;
-  will-change: transform;
-}
-
-@keyframes blob1 {
-  0% {
-    transform: translate(0vw, 0vh);
-  }
-
-  15% {
-    transform: translate(45vw, 20vh);
-  }
-
-  30% {
-    transform: translate(30vw, 55vh);
-  }
-
-  45% {
-    transform: translate(60vw, 30vh);
-  }
-
-  60% {
-    transform: translate(20vw, 65vh);
-  }
-
-  75% {
-    transform: translate(55vw, 10vh);
-  }
-
-  90% {
-    transform: translate(10vw, 40vh);
-  }
-
-  100% {
-    transform: translate(0vw, 0vh);
-  }
-}
-
-.bg-blob2 {
-  position: fixed;
-  z-index: -1;
-  width: 50vw;
-  height: 50vw;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(210, 232, 252, .65) 0%, rgba(210, 232, 252, .25) 45%, transparent 70%);
-  filter: blur(50px);
-  top: 30vh;
-  right: -5vw;
-  animation: blob2 18s ease-in-out infinite;
-  will-change: transform;
-}
-
-@keyframes blob2 {
-  0% {
-    transform: translate(0vw, 0vh);
-  }
-
-  20% {
-    transform: translate(-40vw, 30vh);
-  }
-
-  40% {
-    transform: translate(-20vw, -25vh);
-  }
-
-  60% {
-    transform: translate(-55vw, 10vh);
-  }
-
-  80% {
-    transform: translate(-30vw, 50vh);
-  }
-
-  100% {
-    transform: translate(0vw, 0vh);
-  }
-}
-
 /* ── HEADER & NAV ── */
 header {
   padding: 48px 20px 22px;
@@ -220,7 +112,7 @@ header {
   color: var(--label);
   letter-spacing: 6px;
   text-transform: uppercase;
-  line-height: 1;
+  line-height: 0;
 }
 
 .site-sub {
