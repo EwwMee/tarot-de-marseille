@@ -922,9 +922,12 @@ function buildCardCollection() {
   const T = t();
   try {
     const history = JSON.parse(localStorage.getItem('daily_history') || '[]');
-    if (!history.length) { container.innerHTML = ''; return; }
+    const emptyMsg = lang === 'pt'
+      ? '<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:32px 0;"><div style="font-size:28px;color:var(--tint);opacity:.4;">✦</div><div style="font-size:13px;color:var(--label-3);text-align:center;line-height:1.6;">Nenhuma carta do dia<br>desbloqueada ainda.</div></div>'
+      : '<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:32px 0;"><div style="font-size:28px;color:var(--tint);opacity:.4;">✦</div><div style="font-size:13px;color:var(--label-3);text-align:center;line-height:1.6;">Aucune carte du jour<br>débloquée pour l\'instant.</div></div>';
+    if (!history.length) { container.innerHTML = emptyMsg; return; }
     const entries = history.filter(h => typeof h === 'object').reverse().slice(0, 30);
-    if (!entries.length) { container.innerHTML = ''; return; }
+    if (!entries.length) { container.innerHTML = emptyMsg; return; }
     const label = lang === 'pt' ? 'Histórico das cartas do dia' : 'Historique des cartes du jour';
     const cards = entries.map(e => {
       const a = ARCANES[e.index];
@@ -1012,7 +1015,7 @@ function buildSpreadsWithDaily() {
             <div style="font-size:20px;font-weight:600;color:var(--label);">${greeting}, ${name}</div>
             <span style="font-size:11px;color:var(--label-3);background:var(--fill);border-radius:20px;padding:2px 9px;">${moonPhase[0]} ${moonPhase[1]}</span>
             ${streakLabel ? `<span style="font-size:11px;color:var(--tint);background:rgba(201,120,50,.1);border-radius:20px;padding:2px 9px;font-weight:600;">${streakLabel}</span>` : ''}
-            <button onclick="openCardCollection()" style="margin-left:auto;flex-shrink:0;width:32px;height:32px;border-radius:50%;border:1px solid var(--glass-border-outer);background:var(--glass-bg);backdrop-filter:var(--blur-sm);-webkit-backdrop-filter:var(--blur-sm);color:var(--label-3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .18s;" title="Collection"><svg width="15" height="15" viewBox="0 0 18 20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17 Q3.5 17 3.5 15.5 L3.5 3.5 Q3.5 2 5 2 L13 2 Q14.5 2 14.5 3.5 L14.5 15.5 Q14.5 17 13 17 L7 17" stroke-width="1.4"/><polyline points="9,15 7,17 9,19" stroke-width="1.4"/><line x1="9" y1="8" x2="9" y2="10.5" stroke-width="1.3"/><line x1="9" y1="10.5" x2="11" y2="11.8" stroke-width="1.3"/></svg></button>
+            <button onclick="openCardCollection()" style="margin-left:auto;flex-shrink:0;width:40px;height:40px;border-radius:50%;border:1px solid var(--glass-border-outer);background:var(--glass-bg);backdrop-filter:var(--blur-sm);-webkit-backdrop-filter:var(--blur-sm);color:var(--label-3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .18s;" title="Collection"><svg width="20" height="20" viewBox="0 0 18 20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17 Q3.5 17 3.5 15.5 L3.5 3.5 Q3.5 2 5 2 L13 2 Q14.5 2 14.5 3.5 L14.5 15.5 Q14.5 17 13 17 L7 17" stroke-width="1.4"/><polyline points="9,15 7,17 9,19" stroke-width="1.4"/><line x1="9" y1="8" x2="9" y2="10.5" stroke-width="1.3"/><line x1="9" y1="10.5" x2="11" y2="11.8" stroke-width="1.3"/></svg></button>
           </div>
         </div>`;
     }
