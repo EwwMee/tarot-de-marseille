@@ -116,7 +116,7 @@ input[type=range]#pref-fontsize-slider::-moz-range-thumb {
 
 /* ── HEADER & NAV ── */
 header {
-  padding: 48px 20px 22px;
+  padding: 22px 20px 22px;
   text-align: center;
   background: var(--glass-bg);
   backdrop-filter: var(--blur);
@@ -131,7 +131,7 @@ header {
   color: var(--label);
   letter-spacing: 6px;
   text-transform: uppercase;
-  line-height: 0;
+  line-height: 1.2;
 }
 
 .site-sub {
@@ -1099,7 +1099,7 @@ body.dark .btn-shuffle::before {
   .vcard-name { font-size: 8px; }
   .vcard-pos { font-size: 7px; }
   .container { padding: 24px 14px 80px; }
-  header { padding: 36px 16px 18px; }
+  header { padding: 16px 16px 16px; }
 }
 
 /* ── THEME BTN ── */
@@ -1353,8 +1353,10 @@ nav {
 .nav-tab:hover { color: var(--label-2); background: rgba(255,255,255,.3); }
 .nav-tab.active { color: var(--tint); background: rgba(201,120,50,.08); }
 
-header { margin-left: 72px; }
-.screen { margin-left: 72px; }
+@media (min-width: 768px) {
+  header { margin-left: 72px; padding-right: 72px; }
+  .screen { margin-left: 72px; }
+}
 
 body.dark nav {
   background: rgba(20,16,12,.8);
@@ -1463,10 +1465,7 @@ body.dark .profil-input:focus { background: rgba(255,255,255,.09); }
   }
   .nav-tab { flex: 1; width: auto; height: 60px; border-radius: 0; padding: 6px 4px 4px; }
   .nav-label { font-size: 8px; }
-  header { margin-left: 0; }
-  .screen { margin-left: 0; }
-  .container { padding: 24px 14px calc(80px + env(safe-area-inset-bottom)); }
-  #mute-btn  { bottom: calc(20px  + 60px + env(safe-area-inset-bottom)) !important; }
+  header { margin-left: 0; padding-right: 20px; }
   #theme-btn { bottom: calc(68px  + 60px + env(safe-area-inset-bottom)) !important; }
   #lang-btn  { bottom: calc(116px + 60px + env(safe-area-inset-bottom)) !important; }
   #lang-menu { bottom: calc(164px + 60px + env(safe-area-inset-bottom)) !important; }
@@ -1490,10 +1489,7 @@ body.dark .profil-input:focus { background: rgba(255,255,255,.09); }
     border-right: none; border-top: 1px solid var(--glass-border-outer);
   }
   .nav-tab { flex: 1; width: auto; height: 60px; border-radius: 0; }
-  header { margin-left: 0; }
-  .screen { margin-left: 0; }
-  .container { padding: 24px 14px calc(80px + env(safe-area-inset-bottom)); }
-  #mute-btn  { bottom: calc(20px  + 60px + env(safe-area-inset-bottom)); }
+  header { margin-left: 0; padding-right: 20px; }
   #theme-btn { bottom: calc(68px  + 60px + env(safe-area-inset-bottom)); }
   #lang-btn  { bottom: calc(116px + 60px + env(safe-area-inset-bottom)); }
   #lang-menu { bottom: calc(164px + 60px + env(safe-area-inset-bottom)); }
