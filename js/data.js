@@ -296,10 +296,10 @@ const L = {
       if (p.intention) parts.push(`Contexto pessoal : ${p.intention}`);
       return parts.length ? '\n\nContexto da pessoa :\n' + parts.join('\n') : '';
     },
-    daily_prompt: (a, reversed) => `Carta do dia : ${a.name} (Arcano ${a.roman})${reversed ? ' — INVERTIDA' : ''}.\nPalavras-chave : ${a.keywords.join(', ')}.\nEm 2-3 frases curtas e directas, diz o que esta carta significa para hoje. Sem título, sem "PARTE", sem estrutura. Apenas o texto simples.`,
-    suggestions_prompt: 'Gera exactamente 3 perguntas muito curtas (máx. 6 palavras cada) na primeira pessoa (ex: "Como melhorar a minha situação ?") para aprofundar. Uma por linha, sem número, sem traço.',
-    sys: "És um especialista em Tarot de Marselha, directo e preciso. Tratas a pessoa por tu. As tuas leituras são concisas: sem relleno, sem fórmulas vazias. Para as palavras-chave essenciais, destaca-as com cor <span style=\"color:#c97832;\">c97832</span>. Para o insight final ou convite à acção, começa por →. Respeita a estrutura PARTE 1 / PARTE 2.",
-    prompt: (name, desc, lines, q) => 'Tiragem : ' + name + (q ? '\nQuestão : ' + q : '') + '\n\nCartas :\n' + lines + '\n\nEstrutura a tua resposta assim :\n\nPARTE 1 — CARTA A CARTA\n2-3 frases por carta. Papel preciso na posição. Coloca em itálico (_palavra_) as palavras-chave. Começa com o nome da carta a negrito seguido de um traço.\n\nPARTE 2 — SÍNTESE\n3-4 frases. O que a tiragem diz no conjunto' + (q ? ' em relação à questão colocada' : '') + '. Termina com um convite concreto introduzido por →',
-    spreads: SPREADS_PT,
-  }
+    daily_prompt: (a, reversed) => `Carta do dia: ${a.name} (Arcano ${a.roman})$ {reversed ? ' — REVERSO': ''}.\nPalavras-chave: ${a.keywords.join(',')}.\nEm 2-3 frases curtas e diretas, diga o que esta carta significa para hoje. Sem título, sem “PARTE”, sem estrutura. Apenas o texto bruto.`,
+    suggestions_prompt: 'Gere exatamente 3 perguntas muito curtas (máximo de 6 palavras cada) na primeira pessoa (ex: "Como melhorar a minha situação?") para aprofundar. Uma por linha, sem número, sem travessão.',
+    sys: "Você é um tarólogo experiente, direto e preciso. Você usa o 'tu'. As suas leituras são concisas: sem preenchimento, sem fórmulas vazias. Para as palavras-chave essenciais, destaque-as adicionando a cor <span style=\"color:#c97832;\">c97832</span>. Para a visão final ou convite à ação, comece com →. Respeite a estrutura PARTE 1 / PARTE 2.",
+    prompt: (name, desc, lines, q) => 'Leitura: ' + name + (q ? '\nPergunta: ' + q : '') + '\n\nCartas:\n' + lines + '\n\nEstruture a sua resposta da seguinte forma:\n\nPARTE 1 — CARTA POR CARTA\nPara cada carta: 2-3 frases. Função precisa na sua posição. Comece com o nome da carta escrito em negrito seguido de um traço.\n\nPARTE 2 — SÍNTESE\n3-4 frases. O que a leitura diz no seu conjunto' + (q ? ' em relação à pergunta feita' : '') + '. Termine com um convite concreto introduzido por →',
+    spreads: SPREADS_FR,
+  },
 };
