@@ -122,6 +122,37 @@ header {
   backdrop-filter: var(--blur);
   -webkit-backdrop-filter: var(--blur);
   border-bottom: 1px solid var(--glass-border-outer);
+  position: relative;
+  overflow: hidden;
+}
+
+header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 5%,
+    rgba(201,120,50,.05) 55%,
+    rgba(255,255,255,.12) 70%,
+    rgba(180,220,255,.06) 82%,
+    transparent 100%
+  );
+  background-size: 200% 200%;
+  animation: holoBtnShift 10s ease-in-out infinite;
+  pointer-events: none;
+}
+
+body.dark header::before {
+  background: linear-gradient(
+    105deg,
+    transparent 5%,
+    rgba(255,255,255,.02) 60%,
+    rgba(255,255,255,.05) 72%,
+    rgba(255,255,255,.02) 84%,
+    transparent 100%
+  );
+  background-size: 200% 200%;
 }
 
 .site-title {
@@ -238,7 +269,7 @@ nav {
 .container {
   max-width: 720px;
   margin: 0 auto;
-  padding: 32px 16px 120px;
+  padding: 12px 16px 120px;
 }
 
 .section-label {
@@ -248,7 +279,7 @@ nav {
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--label-3);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 /* ── BUTTONS ── */
@@ -1098,7 +1129,7 @@ body.dark .btn-shuffle::before {
   .vghost { width: 62px; height: 100px; }
   .vcard-name { font-size: 8px; }
   .vcard-pos { font-size: 7px; }
-  .container { padding: 24px 14px 80px; }
+  .container { padding: 12px 14px 80px; }
   header { padding: 16px 16px 16px; }
 }
 
@@ -1447,8 +1478,8 @@ body.dark .profil-input { background: rgba(255,255,255,.06); color: var(--label)
 body.dark .profil-input:focus { background: rgba(255,255,255,.09); }
 
 /* ── QUICK READING ── */
-#quick-reading-block { margin-top: 0; }
-.quick-desc { font-size: 13px; color: var(--label-3); margin-bottom: 14px; }
+#quick-reading-block { margin-top: 0; padding-top: 20px; border-top: 0.5px solid var(--glass-border-outer); }
+.quick-desc { font-size: 13px; color: var(--label-3); margin-bottom: 10px; }
 
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(8px); }

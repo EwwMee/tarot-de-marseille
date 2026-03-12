@@ -119,6 +119,7 @@ function setLang(l) {
     'btn-back-step3': T.new_spread || (l === 'pt' ? '← Nova tiragem' : '← Nouveau tirage'),
     'btn-start-session': T.start_btn,
     'pref-fontsize-label': T.pref_fontsize || (l === 'pt' ? 'Tamanho do texto' : 'Taille du texte'),
+    'collection-modal-title': l === 'pt' ? 'Histórico das cartas do dia' : 'Historique des cartes du jour',
     'pref-fs-normal': T.pref_fontsize_normal || 'Normal',
     'pref-fs-large': T.pref_fontsize_large || (l === 'pt' ? 'Grande' : 'Grand'),
     'pref-fs-xlarge': T.pref_fontsize_xlarge || (l === 'pt' ? 'Muito grande' : 'Très grand'),
@@ -835,6 +836,13 @@ function getDailyCard() {
     const reversed = Math.random() < 0.3;
     const entry = { date: today, index, reversed, unlocked: false };
     localStorage.setItem('daily_card', JSON.stringify(entry));
+    try {
+      const hist = JSON.parse(localStorage.getItem('daily_history') || '[]');
+      if (!hist.find(h => (typeof h === 'object' ? h.date : h) === today)) {
+        hist.push({ date: today, index, reversed });
+        localStorage.setItem('daily_history', JSON.stringify(hist));
+      }
+    } catch(e) {}
     return entry;
   } catch(e) {
     return { date: today, index: Math.floor(Math.random() * 22), reversed: false, unlocked: false };
@@ -849,6 +857,7 @@ function unlockDailyCard() {
   } catch(e) {}
   buildSpreadsWithDaily();
   loadDailyReadingAccueil();
+  buildCardCollection();
 }
 
 // ─── DAILY READING (accueil) ───
@@ -894,6 +903,52 @@ async function loadDailyReadingAccueil() {
   }
 }
 
+
+// ─── CARD COLLECTION ───
+function openCardCollection() {
+  buildCardCollection();
+  const modal = $('collection-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeCardCollection() {
+  const modal = $('collection-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function buildCardCollection() {
+  const container = $('collection-modal-content');
+  if (!container) return;
+  const T = t();
+  try {
+    const history = JSON.parse(localStorage.getItem('daily_history') || '[]');
+    if (!history.length) { container.innerHTML = ''; return; }
+    const entries = history.filter(h => typeof h === 'object').reverse().slice(0, 30);
+    if (!entries.length) { container.innerHTML = ''; return; }
+    const label = lang === 'pt' ? 'Histórico das cartas do dia' : 'Historique des cartes du jour';
+    const cards = entries.map(e => {
+      const a = ARCANES[e.index];
+      const aPt = lang === 'pt' ? ARCANES_PT[e.index] : a;
+      const rev = e.reversed ? '<span style="font-size:9px;color:var(--red);margin-left:3px;">↓</span>' : '';
+      const d = new Date(e.date);
+      const day = d.getDate();
+      const mon = d.toLocaleString(lang === 'pt' ? 'pt-BR' : 'fr-FR', { month: 'short' });
+      return `<div onclick="openModal(${e.index})" style="display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;">
+        <div style="width:56px;height:88px;border-radius:8px;background:var(--glass-bg);border:1px solid ${e.reversed ? 'rgba(180,60,60,.35)' : 'var(--glass-border-outer)'};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px;box-sizing:border-box;position:relative;overflow:hidden;transition:transform .15s;" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:8px;font-weight:700;letter-spacing:1px;color:${e.reversed ? 'var(--red)' : 'var(--label-3)'};">${a.roman}</div>
+          <div style="color:${e.reversed ? 'var(--red)' : 'var(--tint)'};width:28px;height:28px;${e.reversed ? 'transform:rotate(180deg)' : ''}">${ARCANA_SVG[e.index]}</div>
+        </div>
+        <div style="font-size:9px;font-weight:600;color:var(--label-2);text-align:center;line-height:1.2;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${aPt.name}</div>
+        <div style="font-size:9px;color:var(--label-3);">${day} ${mon}</div>
+      </div>`;
+    }).join('');
+    const empty = lang === 'pt' ? 'Nenhuma carta ainda.' : 'Aucune carte encore.';
+    container.innerHTML = entries.length
+      ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:12px;">${cards}</div>`
+      : `<div style="font-size:13px;color:var(--label-3);text-align:center;padding:20px 0;">${empty}</div>`;
+  } catch(e) { container.innerHTML = ''; }
+}
+
 // ─── BUILD DAILY CARD (accueil) ───
 function buildSpreadsWithDaily() {
   const T = t();
@@ -914,10 +969,51 @@ function buildSpreadsWithDaily() {
     } else {
       const name = localStorage.getItem('groq_name') || '';
       const greeting = lang === 'pt' ? 'Olá' : 'Bonjour';
+
+      // Phase lunaire
+      const moonPhase = (() => {
+        const now = new Date();
+        const known = new Date(2000, 0, 6);
+        const diff = (now - known) / (1000 * 60 * 60 * 24);
+        const cycle = diff % 29.53;
+        if (cycle < 1.85)  return ['🌑', lang === 'pt' ? 'Lua nova' : 'Nouvelle lune'];
+        if (cycle < 7.38)  return ['🌒', lang === 'pt' ? 'Crescente' : 'Croissant'];
+        if (cycle < 9.22)  return ['🌓', lang === 'pt' ? 'Quarto crescente' : 'Premier quartier'];
+        if (cycle < 14.76) return ['🌔', lang === 'pt' ? 'Gibosa crescente' : 'Gibbeuse croissante'];
+        if (cycle < 16.61) return ['🌕', lang === 'pt' ? 'Lua cheia' : 'Pleine lune'];
+        if (cycle < 22.15) return ['🌖', lang === 'pt' ? 'Gibosa minguante' : 'Gibbeuse décroissante'];
+        if (cycle < 23.99) return ['🌗', lang === 'pt' ? 'Quarto minguante' : 'Dernier quartier'];
+        return ['🌘', lang === 'pt' ? 'Minguante' : 'Décroissant'];
+      })();
+
+      // Streak
+      const streak = (() => {
+        try {
+          const history = JSON.parse(localStorage.getItem('daily_history') || '[]');
+          if (!history.length) return 0;
+          const dates = history.map(h => typeof h === 'object' ? h.date : h);
+          let count = 0;
+          let check = new Date();
+          for (let i = 0; i < 365; i++) {
+            const d = check.toISOString().split('T')[0];
+            if (dates.includes(d)) { count++; check.setDate(check.getDate() - 1); }
+            else break;
+          }
+          return count;
+        } catch(e) { return 0; }
+      })();
+
+      const streakLabel = streak > 1 ? (lang === 'pt' ? `${streak} dias consecutivos` : `${streak} jours consécutifs`) : '';
+
       bannerAccueil.innerHTML = `
-        <div style="padding:4px 2px 20px;display:flex;align-items:center;gap:10px;">
-          <div style="font-size:20px;color:var(--tint);">✦</div>
-          <div style="font-size:20px;font-weight:600;color:var(--label);">${greeting}, ${name}</div>
+        <div style="padding:2px 2px 4px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div style="font-size:20px;color:var(--tint);flex-shrink:0;">✦</div>
+            <div style="font-size:20px;font-weight:600;color:var(--label);">${greeting}, ${name}</div>
+            <span style="font-size:11px;color:var(--label-3);background:var(--fill);border-radius:20px;padding:2px 9px;">${moonPhase[0]} ${moonPhase[1]}</span>
+            ${streakLabel ? `<span style="font-size:11px;color:var(--tint);background:rgba(201,120,50,.1);border-radius:20px;padding:2px 9px;font-weight:600;">${streakLabel}</span>` : ''}
+            <button onclick="openCardCollection()" style="margin-left:auto;flex-shrink:0;width:32px;height:32px;border-radius:50%;border:1px solid var(--glass-border-outer);background:var(--glass-bg);backdrop-filter:var(--blur-sm);-webkit-backdrop-filter:var(--blur-sm);color:var(--label-3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .18s;" title="Collection"><svg width="15" height="15" viewBox="0 0 18 20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17 Q3.5 17 3.5 15.5 L3.5 3.5 Q3.5 2 5 2 L13 2 Q14.5 2 14.5 3.5 L14.5 15.5 Q14.5 17 13 17 L7 17" stroke-width="1.4"/><polyline points="9,15 7,17 9,19" stroke-width="1.4"/><line x1="9" y1="8" x2="9" y2="10.5" stroke-width="1.3"/><line x1="9" y1="10.5" x2="11" y2="11.8" stroke-width="1.3"/></svg></button>
+          </div>
         </div>`;
     }
   }
@@ -950,7 +1046,7 @@ function buildSpreadsWithDaily() {
 
   container.innerHTML = `
     <p class="section-label">${T.daily_label || 'Carte du jour'}</p>
-    <div style="background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--glass-shadow);border:1px solid var(--glass-border-outer);margin-bottom:28px;">
+    <div style="background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--glass-shadow);border:1px solid var(--glass-border-outer);margin-bottom:10px;">
       <div style="padding:20px 22px;display:flex;align-items:center;gap:20px;">
         <div style="width:64px;height:64px;flex-shrink:0;color:${daily.reversed ? 'var(--red)' : 'var(--tint)'};">${ARCANA_SVG[daily.index]}</div>
         <div style="flex:1;min-width:0;">
@@ -970,6 +1066,7 @@ function buildSpreadsWithDaily() {
     </div>`;
 
   loadDailyReadingAccueil();
+  buildCardCollection();
 }
 
 // ─── TIRAGE RAPIDE ───
