@@ -40,6 +40,8 @@ function loadProfil() {
 function getProfilContext() {
   try {
     const p = JSON.parse(localStorage.getItem('tarot_profil') || '{}');
+    if (typeof t().profil_ctx === 'function') return t().profil_ctx(p);
+    // fallback FR
     const parts = [];
     if (p.age) parts.push(`Âge : ${p.age} ans`);
     if (p.situation) parts.push(`Situation amoureuse : ${p.situation}`);
@@ -87,9 +89,17 @@ function setLang(l) {
     'quick-deepen-title': T.deepen_title,
     'quick-deepen-desc': T.deepen_desc,
     'quick-label': T.quick_label || 'Tirage rapide',
+    // Éléments précédemment hardcodés sans id
+    'label-prefs': T.prefs_title || (l === 'pt' ? 'Preferências' : 'Préférences'),
+    'quick-desc': T.quick_desc || (l === 'pt' ? '3 cartas · Passado · Presente · Futuro' : '3 cartes · Passé · Présent · Futur'),
+    'question-label-text': T.question_label || (l === 'pt' ? 'A tua questão' : 'Ta question'),
+    'btn-back-step1': T.back || (l === 'pt' ? '← Mudar de tiragem' : '← Changer de tirage'),
+    'btn-back-step3': T.new_spread || (l === 'pt' ? '← Nova tiragem' : '← Nouveau tirage'),
+    'btn-start-session': T.start_btn,
   };
   Object.entries(map).forEach(([id, val]) => { const el = $(id); if (el && val) el.textContent = val; });
 
+  // Placeholders
   const phMap = {
     'user-name-input': T.name_ph,
     'groq-key-input': T.key_ph,
@@ -98,6 +108,55 @@ function setLang(l) {
     'quick-chat-input': T.chat_ph,
   };
   Object.entries(phMap).forEach(([id, ph]) => { const el = $(id); if (el) el.placeholder = ph; });
+
+  // Session bar label (SESSION · nome)
+  const sbl = $('session-bar-label');
+  if (sbl) sbl.textContent = (T.session_end_label || (l === 'pt' ? 'SESSÃO' : 'SESSION')) + ' · ';
+
+  const profileLabels = [
+    ['profil-label-age', T.profil_age],
+    ['profil-label-situation', T.profil_situation],
+    ['profil-label-domaine', T.profil_domaine],
+    ['profil-label-intention', T.profil_intention],
+    ['profil-note-text', T.profil_note],
+    ['pref-label-theme', T.pref_theme],
+    ['pref-label-lang', T.pref_lang],
+  ];
+  profileLabels.forEach(([id, val]) => { const el=$(id); if(el && val) el.textContent = val; });
+
+  // Profil intention placeholder
+  const piEl = $('profil-intention');
+  if (piEl && T.profil_intention_ph) piEl.placeholder = T.profil_intention_ph;
+
+  // api-note (innerHTML pour le lien)
+  const apiNoteEl = $('api-note');
+  if (apiNoteEl && T.api_note) apiNoteEl.innerHTML = T.api_note;
+
+  // Bouton session bar
+  const sb = $('session-bar');
+  if (sb) {
+    const endBtn = sb.querySelector('button');
+    if (endBtn) endBtn.textContent = T.btn_end || 'Terminer';
+  }
+
+  // Select options — situation
+  const selSit = $('profil-situation');
+  if (selSit && T.situation_opts) {
+    Array.from(selSit.options).forEach((opt, i) => { if (T.situation_opts[i]) opt.text = T.situation_opts[i]; });
+  }
+
+  // Select options — domaine
+  const selDom = $('profil-domaine');
+  if (selDom && T.domaine_opts) {
+    Array.from(selDom.options).forEach((opt, i) => { if (T.domaine_opts[i]) opt.text = T.domaine_opts[i]; });
+  }
+
+  // lang-menu note
+  const lmn = document.querySelector('#lang-menu div:last-child');
+  if (lmn && T.lang_menu_note) lmn.textContent = T.lang_menu_note;
+
+  // pref theme btn
+  updatePrefsThemeBtn();
 
   buildSpreads();
   buildLibrary();
@@ -115,7 +174,6 @@ function startSession() {
   groqKey = key;
   try { localStorage.setItem('groq_key', key); localStorage.setItem('groq_name', name); } catch (e) {}
   activateSession(name);
-  if (document.getElementById('daily-text')) loadDailyReading();
   if (document.getElementById('daily-text-accueil')) loadDailyReadingAccueil();
 }
 
@@ -132,6 +190,9 @@ function activateSession(name) {
   if (prb) prb.style.display = 'block';
   loadProfil();
   updatePrefsThemeBtn();
+  // Sync end button label
+  const sb = $('session-bar');
+  if (sb) { const endBtn = sb.querySelector('button'); if (endBtn) endBtn.textContent = t().btn_end || 'Terminer'; }
 }
 
 function endSession() {
@@ -174,7 +235,7 @@ function updatePrefsThemeBtn() {
   const btn = $('pref-theme-btn');
   if (!btn) return;
   const dark = document.body.classList.contains('dark');
-  btn.textContent = dark ? '☾ Sombre' : '☀ Clair';
+  btn.textContent = dark ? (t().pref_theme_dark || '☾ Sombre') : (t().pref_theme_light || '☀ Clair');
 }
 
 // ─── GROQ API ───
@@ -302,17 +363,17 @@ function shuffleDraw() {
     window.scrollTo(0, scrollY);
 
     setTimeout(() => {
-  const filled = document.querySelectorAll('#spread-layout .vcard.filled');
-  filled.forEach((el, i) => {
-    el.style.opacity = '0'; el.style.transform = 'translateY(-16px) scale(.95)'; el.style.transition = 'none';
-    void el.offsetWidth;
-    el.style.transition = `opacity .3s ${i * 55}ms ease, transform .3s ${i * 55}ms cubic-bezier(.34,1.4,.64,1)`;
-    el.style.opacity = '1'; el.style.transform = 'translateY(0) scale(1)';
-    const delay = i * 55 + 350;
-    setTimeout(() => { el.style.transition = ''; el.style.transform = ''; el.style.opacity = ''; }, delay);
-  });
-  $('spread-layout').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}, 50);
+      const filled = document.querySelectorAll('#spread-layout .vcard.filled');
+      filled.forEach((el, i) => {
+        el.style.opacity = '0'; el.style.transform = 'translateY(-16px) scale(.95)'; el.style.transition = 'none';
+        void el.offsetWidth;
+        el.style.transition = `opacity .3s ${i * 55}ms ease, transform .3s ${i * 55}ms cubic-bezier(.34,1.4,.64,1)`;
+        el.style.opacity = '1'; el.style.transform = 'translateY(0) scale(1)';
+        const delay = i * 55 + 350;
+        setTimeout(() => { el.style.transition = ''; el.style.transform = ''; el.style.opacity = ''; }, delay);
+      });
+      $('spread-layout').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
   }, totalDur);
 }
 
@@ -367,7 +428,8 @@ function renderAmour(el) {
   for (let r = 1; r <= 3; r++) {
     for (let c = 1; c <= 3; c++) {
       const k = `${c},${r}`;
-      h += k in used ? `<div style="grid-column:${c};grid-row:${r};">${vcardHTML(used[k])}</div>`
+      h += k in used
+        ? `<div style="grid-column:${c};grid-row:${r};">${vcardHTML(used[k])}</div>`
         : `<div style="grid-column:${c};grid-row:${r};" class="vghost"></div>`;
     }
   }
@@ -404,12 +466,12 @@ function renderPositionList() {
     const a = filled ? ARCANES[slot.arcanaIndex] : null;
     return `<div class="position-slot">
       <div class="pos-label-block">
-        <div class="pos-num">POSITION ${i + 1}</div>
+        <div class="pos-num">${t().pos_label} ${i + 1}</div>
         <div class="pos-name">${parts[0].trim()}${parts[1] ? ' · ' + parts[1].trim() : ''}</div>
       </div>
       <div class="pos-card-block${filled ? ' filled' : ''}" onclick="${filled ? '' : 'openPicker(' + i + ')'}">
         ${filled
-        ? `<div class="pos-card-info">
+          ? `<div class="pos-card-info">
                <div class="pos-card-svg-wrap">${ARCANA_SVG[slot.arcanaIndex]}</div>
                <div class="pos-card-text">
                  <div class="pos-card-name">${a.name}</div>
@@ -420,8 +482,8 @@ function renderPositionList() {
                <button class="pos-reversed-toggle${slot.reversed ? ' on' : ''}" onclick="toggleReversed(event,${i})">${slot.reversed ? t().rev_label : t().turn_btn}</button>
                <button class="pos-clear" onclick="clearSlot(event,${i})">×</button>
              </div>`
-        : `<span class="pos-card-placeholder">${t().click_pick}</span>`
-      }
+          : `<span class="pos-card-placeholder">${t().click_pick}</span>`
+        }
       </div>
     </div>`;
   }).join('');
@@ -431,7 +493,7 @@ function renderPositionList() {
 function openPicker(i) {
   activeSlotIndex = i;
   const taken = slots.map(s => s.arcanaIndex).filter(x => x !== null);
-  $('picker-title').textContent = `Position ${i + 1} — ${selectedSpread.positions[i].split('—')[0].trim()}`;
+  $('picker-title').textContent = `${t().pos_label} ${i + 1} — ${selectedSpread.positions[i].split('—')[0].trim()}`;
   $('picker-grid').innerHTML = ARCANES.map((a, j) => `
     <div class="picker-cell${taken.includes(j) && slots[i].arcanaIndex !== j ? ' taken' : ''}" onclick="pickCard(${j})">
       <div class="pc-num">${a.roman}</div><div class="pc-name">${a.name}</div>
@@ -482,8 +544,8 @@ async function runAnalysis() {
       <div class="ac-row"><div class="ac-pos-num">${i + 1}</div><div class="ac-body">
         <div class="ac-pos-label">${selectedSpread.positions[i]}</div>
         <div class="ac-card-name">${a.name}</div>
-        <div class="ac-arcanum">Arcane ${a.roman}${slot.reversed ? ' · <span style="color:var(--red)">Renversée</span>' : ''}</div>
-        <div class="ac-kws">${a.keywords.map(k => `<span class="ac-kw">${k}</span>`).join('')}</div>
+        <div class="ac-arcanum">Arcane ${a.roman}${slot.reversed ? ' · <span style="color:var(--red)">${t().rev_label}</span>' : ''}</div>
+        <div class="ac-kws">${(lang === 'pt' ? ARCANES_PT[slot.arcanaIndex] : a).keywords.map(k => `<span class="ac-kw">${k}</span>`).join('')}</div>
       </div></div>
     </div>`;
   }).join('');
@@ -492,7 +554,7 @@ async function runAnalysis() {
 
   readingContext = slots.map((slot, i) => {
     const a = ARCANES[slot.arcanaIndex];
-    return `Position ${i + 1} (${selectedSpread.positions[i]}) : ${a.name} (Arcane ${a.roman})${slot.reversed ? ' RENVERSÉE' : ''}`;
+    return `${t().pos_label} ${i + 1} (${selectedSpread.positions[i]}) : ${a.name} (Arcane ${a.roman})${slot.reversed ? ' RENVERSÉE' : ''}`;
   }).join('\n');
 
   const sysPrompt = t().sys + getProfilContext();
@@ -500,11 +562,7 @@ async function runAnalysis() {
 
   try {
     const raw = await callGroq([{ role: 'system', content: sysPrompt }, { role: 'user', content: userPrompt }]);
-    console.log('avant render:', window.scrollY);
     renderReading(raw);
-    console.log('après render:', window.scrollY);
-    setTimeout(() => console.log('après 100ms:', window.scrollY), 100);
-    setTimeout(() => console.log('après 500ms:', window.scrollY), 500);
     chatHistory = [
       { role: 'system', content: sysPrompt },
       { role: 'user', content: userPrompt },
@@ -525,7 +583,8 @@ async function runAnalysis() {
 function buildPrompt() {
   const lines = slots.map((slot, i) => {
     const a = ARCANES[slot.arcanaIndex];
-    return `Position ${i + 1} (${selectedSpread.positions[i]}) : ${a.name} (Arcane ${a.roman})${slot.reversed ? ' — RENVERSÉE' : ''}\nMots-clés : ${a.keywords.join(', ')}\nSens endroit : ${a.upright}\nSens renversé : ${a.reversed}`;
+    const aPt = lang === 'pt' ? ARCANES_PT[slot.arcanaIndex] : a;
+    return `${t().pos_label} ${i + 1} (${selectedSpread.positions[i]}) : ${a.name} (Arcane ${a.roman})${slot.reversed ? ' — RENVERSÉE' : ''}\nMots-clés : ${aPt.keywords.join(', ')}\nSens endroit : ${aPt.upright}\nSens renversé : ${aPt.reversed}`;
   }).join('\n\n');
   const q = ($('question-input') || {}).value || '';
   return t().prompt(selectedSpread.name, selectedSpread.desc, lines, q.trim());
@@ -547,8 +606,8 @@ function fmt(text) {
 }
 
 function renderReading(raw) {
-  const p1 = raw.match(/PARTIE\s*1[^:\n]*[:\n]([\s\S]*?)(?=PARTIE\s*2|$)/i);
-  const p2 = raw.match(/PARTIE\s*2[^:\n]*[:\n]([\s\S]*)/i);
+  const p1 = raw.match(/PA(?:R?TIE|RT?E?)\s*1[^:\n]*[:\n]([\s\S]*?)(?=PA(?:R?TIE|RT?E?)\s*2|$)/i);
+  const p2 = raw.match(/PA(?:R?TIE|RT?E?)\s*2[^:\n]*[:\n]([\s\S]*)/i);
   const fmtHL = s => fmt(highlightText(s));
   $('reading-result').innerHTML = p1 && p2
     ? `<div class="reading-section"><div class="reading-section-title">${t().card_by_card}</div><div class="reading-text">${fmtHL(p1[1].trim())}</div></div>
@@ -570,11 +629,10 @@ async function sendChatMessage() {
   appendChatMsg('user', msg, 'chat-messages');
   chatHistory.push({ role: 'user', content: msg });
   generateSuggestions(chatHistory, 'chat-input', 'sendChatMessage');
-  generateSuggestions(quickChatHistory, 'quick-chat-input', 'sendQuickChatMessage');
 
   const tid = 't' + Date.now();
   $('chat-messages').insertAdjacentHTML('beforeend',
-    `<div class="chat-typing" id="${tid}"><span style="min-width:36px;font-size:9px;letter-spacing:2px;color:var(--label-3)">IA</span><span>· · ·</span></div>`);
+    `<div class="chat-typing" id="${tid}"><span style="min-width:36px;font-size:9px;letter-spacing:2px;color:var(--label-3)">${t().ai}</span><span>· · ·</span></div>`);
   scrollChat('chat-messages');
 
   try {
@@ -606,12 +664,11 @@ async function sendQuickChatMessage() {
   $('quick-chat-send').disabled = true;
   appendChatMsg('user', msg, 'quick-chat-messages');
   quickChatHistory.push({ role: 'user', content: msg });
-  generateSuggestions(chatHistory, 'chat-input', 'sendChatMessage');
   generateSuggestions(quickChatHistory, 'quick-chat-input', 'sendQuickChatMessage');
 
   const tid = 't' + Date.now();
   $('quick-chat-messages').insertAdjacentHTML('beforeend',
-    `<div class="chat-typing" id="${tid}"><span style="min-width:36px;font-size:9px;letter-spacing:2px;color:var(--label-3)">IA</span><span>· · ·</span></div>`);
+    `<div class="chat-typing" id="${tid}"><span style="min-width:36px;font-size:9px;letter-spacing:2px;color:var(--label-3)">${t().ai}</span><span>· · ·</span></div>`);
   scrollChat('quick-chat-messages');
 
   try {
@@ -621,7 +678,7 @@ async function sendQuickChatMessage() {
     const lastUserMsg = msgs[msgs.length - 1];
     if (lastUserMsg) lastUserMsg.scrollIntoView({ behavior: 'smooth' });
     appendChatMsg('ai', raw, 'quick-chat-messages');
-    
+    quickChatHistory.push({ role: 'assistant', content: raw });
   } catch (err) {
     $(tid)?.remove();
     appendChatMsg('ai', err.message, 'quick-chat-messages');
@@ -695,7 +752,7 @@ function toggleMute() {
     btn.textContent = '♩';
   }
   const ico = $('drawer-mute-icon');
-if (ico) ico.textContent = $('bg-audio').muted ? '♩' : '♪';
+  if (ico) ico.textContent = $('bg-audio').muted ? '♩' : '♪';
 }
 
 function handleSplashClick() {
@@ -746,9 +803,9 @@ function toggleTheme() {
   try { localStorage.setItem('tarot_theme', dark ? 'dark' : 'light'); } catch(e) {}
   updatePrefsThemeBtn();
   const lbl = $('drawer-theme-label');
-if (lbl) lbl.textContent = document.body.classList.contains('dark') ? 'Thème sombre' : 'Thème clair';
-const ico = $('drawer-theme-icon');
-if (ico) ico.textContent = document.body.classList.contains('dark') ? '☾' : '☀';
+  if (lbl) lbl.textContent = document.body.classList.contains('dark') ? (lang === 'pt' ? 'Tema escuro' : 'Thème sombre') : (lang === 'pt' ? 'Tema claro' : 'Thème clair');
+  const ico = $('drawer-theme-icon');
+  if (ico) ico.textContent = document.body.classList.contains('dark') ? '☾' : '☀';
 }
 
 // ─── DAILY CARD ───
@@ -783,13 +840,13 @@ async function loadDailyReadingAccueil() {
   const daily = getDailyCard();
   if (!daily.unlocked) return;
   const a = ARCANES[daily.index];
-  const prompt = `Carte du jour : ${a.name} (Arcane ${a.roman})${daily.reversed ? ' — RENVERSÉE' : ''}.
-Mots-clés : ${a.keywords.join(', ')}.
-En 2-3 phrases courtes et directes, dis ce que cette carte signifie pour aujourd'hui. Pas de titre, pas de "PARTIE", pas de structure. Juste le texte brut.`;
+  const prompt = t().daily_prompt
+    ? t().daily_prompt(a, daily.reversed)
+    : `Carte du jour : ${a.name} (Arcane ${a.roman})${daily.reversed ? ' — RENVERSÉE' : ''}.\nMots-clés : ${a.keywords.join(', ')}.\nEn 2-3 phrases courtes et directes, dis ce que cette carte signifie pour aujourd'hui. Pas de titre, pas de "PARTIE", pas de structure. Juste le texte brut.`;
 
   try {
     const today = new Date().toISOString().split('T')[0];
-    const savedRaw = localStorage.getItem('daily_reading_' + today);
+    const savedRaw = localStorage.getItem('daily_reading_' + today + '_' + lang);
     const savedIndex = localStorage.getItem('daily_reading_index_' + today);
     const savedReading = savedRaw && parseInt(savedIndex) === parseInt(daily.index) ? savedRaw : null;
 
@@ -808,7 +865,7 @@ En 2-3 phrases courtes et directes, dis ce que cette carte signifie pour aujourd
       { role: 'system', content: t().sys + getProfilContext() },
       { role: 'user', content: prompt }
     ]);
-    localStorage.setItem('daily_reading_' + today, raw);
+    localStorage.setItem('daily_reading_' + today + '_' + lang, raw);
     localStorage.setItem('daily_reading_index_' + today, daily.index);
     const parts = raw.split('→');
     let html = fmt(parts[0].trim());
@@ -822,29 +879,32 @@ En 2-3 phrases courtes et directes, dis ce que cette carte signifie pour aujourd
 
 // ─── BUILD DAILY CARD (accueil) ───
 function buildSpreadsWithDaily() {
+  const T = t();
   const bannerAccueil = $('session-banner-accueil');
-if (bannerAccueil) {
-  if (!groqKey) {
-    bannerAccueil.innerHTML = `
-      <div class="api-banner" style="margin-bottom:24px;">
-        <div class="api-banner-title">Nouvelle session</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <input id="user-name-input-acc" type="text" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Ton prénom" style="display:block;width:100%;background:var(--fill);border:none;border-radius:var(--r-sm);color:var(--label);font-family:var(--font);font-size:15px;padding:13px 14px;outline:none;caret-color:var(--tint);">
-          <textarea id="groq-key-input-acc" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Clé Groq — gsk_…" style="font-family:monospace;font-size:12px;height:56px;resize:none;word-break:break-all;display:block;width:100%;background:var(--fill);border:none;border-radius:var(--r-sm);color:var(--label);padding:13px 14px;outline:none;caret-color:var(--tint);"></textarea>
-          <button class="api-btn" onclick="startSessionFromAccueil()">Commencer la session →</button>
-        </div>
-        <div class="api-note">Clé gratuite sur <a href="https://console.groq.com/keys" target="_blank">console.groq.com</a> · Stockée localement.</div>
-        <div id="groq-status-acc" class="api-status" style="display:none;"></div>
-      </div>`;
-  } else {
-  const name = localStorage.getItem('groq_name') || '';
-  bannerAccueil.innerHTML = `
-    <div style="padding:4px 2px 20px;display:flex;align-items:center;gap:10px;">
-      <div style="font-size:20px;color:var(--tint);">✦</div>
-      <div style="font-size:20px;font-weight:600;color:var(--label);">Bonjour, ${name}</div>
-    </div>`;
-}
-}
+  if (bannerAccueil) {
+    if (!groqKey) {
+      bannerAccueil.innerHTML = `
+        <div class="api-banner" style="margin-bottom:24px;">
+          <div class="api-banner-title">${T.session_title}</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <input id="user-name-input-acc" type="text" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="${T.name_ph}" style="display:block;width:100%;background:var(--fill);border:none;border-radius:var(--r-sm);color:var(--label);font-family:var(--font);font-size:15px;padding:13px 14px;outline:none;caret-color:var(--tint);">
+            <textarea id="groq-key-input-acc" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="${T.key_ph}" style="font-family:monospace;font-size:12px;height:56px;resize:none;word-break:break-all;display:block;width:100%;background:var(--fill);border:none;border-radius:var(--r-sm);color:var(--label);padding:13px 14px;outline:none;caret-color:var(--tint);"></textarea>
+            <button class="api-btn" onclick="startSessionFromAccueil()">${T.start_btn}</button>
+          </div>
+          <div class="api-note">${T.api_note}</div>
+          <div id="groq-status-acc" class="api-status" style="display:none;"></div>
+        </div>`;
+    } else {
+      const name = localStorage.getItem('groq_name') || '';
+      const greeting = lang === 'pt' ? 'Olá' : 'Bonjour';
+      bannerAccueil.innerHTML = `
+        <div style="padding:4px 2px 20px;display:flex;align-items:center;gap:10px;">
+          <div style="font-size:20px;color:var(--tint);">✦</div>
+          <div style="font-size:20px;font-weight:600;color:var(--label);">${greeting}, ${name}</div>
+        </div>`;
+    }
+  }
+
   const container = $('daily-block-accueil');
   if (!container) return;
 
@@ -855,36 +915,40 @@ if (bannerAccueil) {
   const diff = midnight - now;
   const h = Math.floor(diff / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
+  const timeStr = `${h}h ${m}m`;
 
   if (!daily.unlocked) {
     container.innerHTML = `
-      <p class="section-label">Carte du jour</p>
+      <p class="section-label">${T.daily_label || 'Carte du jour'}</p>
       <div onclick="unlockDailyCard()" class="daily-locked" style="margin-bottom:24px;">
         <div style="width:56px;height:56px;border-radius:50%;background:var(--tint-bg);border:1.5px solid var(--tint);display:flex;align-items:center;justify-content:center;font-size:22px;">✦</div>
-        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tint);">Révéler la carte du jour</div>
-        <div style="font-size:12px;color:var(--label-3);text-align:center;line-height:1.6;">Votre carte quotidienne vous attend.<br>Elle changera dans ${h}h ${m}m.</div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tint);">${T.daily_reveal}</div>
+        <div style="font-size:12px;color:var(--label-3);text-align:center;line-height:1.6;">${typeof T.daily_locked_desc === 'function' ? T.daily_locked_desc(timeStr) : `Votre carte quotidienne vous attend.<br>Elle changera dans ${timeStr}.`}</div>
       </div>`;
     return;
   }
 
+  const aPt = lang === 'pt' ? ARCANES_PT[daily.index] : a;
+  const revLabel = daily.reversed ? ` · <span style="color:var(--red)">${T.rev_label}</span>` : '';
+
   container.innerHTML = `
-    <p class="section-label">Carte du jour</p>
+    <p class="section-label">${T.daily_label || 'Carte du jour'}</p>
     <div style="background:var(--glass-bg);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--glass-shadow);border:1px solid var(--glass-border-outer);margin-bottom:28px;">
       <div style="padding:20px 22px;display:flex;align-items:center;gap:20px;">
         <div style="width:64px;height:64px;flex-shrink:0;color:${daily.reversed ? 'var(--red)' : 'var(--tint)'};">${ARCANA_SVG[daily.index]}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--label-3);margin-bottom:4px;">Arcane ${a.roman}${daily.reversed ? ' · <span style="color:var(--red)">Renversée</span>' : ''}</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--label-3);margin-bottom:4px;">Arcane ${a.roman}${revLabel}</div>
           <div style="font-size:18px;font-weight:500;color:var(--label);margin-bottom:8px;">${a.name}</div>
-          <div style="display:flex;gap:5px;flex-wrap:wrap;">${a.keywords.map(k => `<span style="font-size:11px;font-weight:500;color:var(--label-2);background:var(--fill);padding:3px 10px;border-radius:20px;">${k}</span>`).join('')}</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">${aPt.keywords.map(k => `<span style="font-size:11px;font-weight:500;color:var(--label-2);background:var(--fill);padding:3px 10px;border-radius:20px;">${k}</span>`).join('')}</div>
         </div>
       </div>
       <div style="padding:0 22px 20px;font-size:14px;color:var(--label-2);line-height:1.7;">
-        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--label-3);margin-bottom:8px;">Lecture du jour</div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--label-3);margin-bottom:8px;">${T.daily_reading_label || 'Lecture du jour'}</div>
         <div id="daily-text-accueil"><span style="color:var(--label-3);animation:pulse 2s infinite;display:inline-block;">· · ·</span></div>
       </div>
       <div style="padding:12px 22px;border-top:1px solid var(--glass-border-outer);display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:11px;color:var(--label-3);">Nouvelle carte dans ${h}h ${m}m</span>
-        <span style="font-size:11px;font-weight:600;color:var(--tint);cursor:pointer;" onclick="openModal(${daily.index})">Voir l'arcane →</span>
+        <span style="font-size:11px;color:var(--label-3);">${typeof T.daily_next === 'function' ? T.daily_next(timeStr) : `Nouvelle carte dans ${timeStr}`}</span>
+        <span style="font-size:11px;font-weight:600;color:var(--tint);cursor:pointer;" onclick="openModal(${daily.index})">${T.daily_see || "Voir l'arcane →"}</span>
       </div>
     </div>`;
 
@@ -894,7 +958,7 @@ if (bannerAccueil) {
 // ─── TIRAGE RAPIDE ───
 async function quickShuffleAndAnalyze() {
   document.querySelectorAll('.btn-shuffle').forEach(b => { if (!b.id) b.remove(); });
-  
+
   if (!groqKey) {
     showScreen('moi', $('nav-moi'));
     return;
@@ -911,16 +975,14 @@ async function quickShuffleAndAnalyze() {
   $('quick-chat-messages').innerHTML = '';
   quickChatHistory = [];
 
-  // Tirer 3 cartes aléatoires
   const indices = Array.from({ length: 22 }, (_, i) => i);
   for (let i = indices.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [indices[i], indices[j]] = [indices[j], indices[i]];
   }
   const quickSlots = indices.slice(0, 3).map(idx => ({ arcanaIndex: idx, reversed: Math.random() < .3 }));
-  const positions = ['Le Passé', 'Le Présent', 'Le Futur'];
+  const positions = t().spreads[0].positions; // PPF positions in current lang
 
-  // Afficher les cartes
   const layout = $('quick-layout');
   layout.innerHTML = quickSlots.map((slot, i) => {
     const a = ARCANES[slot.arcanaIndex];
@@ -932,88 +994,34 @@ async function quickShuffleAndAnalyze() {
     </div>`;
   }).join('');
 
-  // Animation mélange
-  layout.innerHTML = '';
-  layout.style.position = 'relative';
-  layout.style.minHeight = '126px';
-
-  const cx = layout.offsetWidth / 2 - 39;
-  const cy = 0;
-  const cardA = document.createElement('div');
-  const cardB = document.createElement('div');
-  [cardA, cardB].forEach((c, ii) => {
-    c.className = 'vcard filled';
-    c.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:100%;">
-      <span style="font-family:var(--font);font-size:6.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tint);">TAROT</span>
-      <span style="font-family:var(--font);font-size:5.5px;font-weight:400;letter-spacing:2.5px;text-transform:uppercase;color:var(--tint);opacity:.6;">do</span>
-      <span style="font-family:var(--font);font-size:6.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tint);">MĒCAS</span>
-    </div>`;
-    c.style.cssText = `position:absolute;left:${cx}px;top:${cy}px;pointer-events:none;z-index:${ii+2};opacity:0;transition:opacity .15s;`;
-    layout.appendChild(c);
-  });
-
-  setTimeout(() => { cardA.style.opacity = '1'; cardB.style.opacity = '1'; }, 50);
-
-  const passes = 6, passDur = 280;
-  for (let p = 0; p < passes; p++) {
-    const even = p % 2 === 0;
-    setTimeout(() => {
-      cardA.style.transition = `transform ${passDur}ms cubic-bezier(.4,0,.2,1)`;
-      cardB.style.transition = `transform ${passDur}ms cubic-bezier(.4,0,.2,1)`;
-      const offset = 12, rot = 8;
-      if (even) {
-        cardA.style.transform = `translateX(${offset}px) rotate(${rot}deg)`; cardA.style.zIndex = '5';
-        cardB.style.transform = `translateX(-${offset}px) rotate(-${rot}deg)`; cardB.style.zIndex = '4';
-      } else {
-        cardA.style.transform = `translateX(-${offset}px) rotate(-${rot}deg)`; cardA.style.zIndex = '4';
-        cardB.style.transform = `translateX(${offset}px) rotate(${rot}deg)`; cardB.style.zIndex = '5';
-      }
-    }, p * passDur);
-  }
-
-  const totalDur = passes * passDur + 200;
+  const totalDur = 0;
   setTimeout(() => {
-    cardA.style.opacity = '0'; cardB.style.opacity = '0';
-    setTimeout(() => { cardA.remove(); cardB.remove(); layout.style.position = ''; layout.style.minHeight = ''; }, 200);
+    layout.querySelectorAll('.vcard').forEach((el, i) => {
+      el.style.opacity = '0'; el.style.transform = 'translateY(-12px) scale(.95)'; el.style.transition = 'none';
+      void el.offsetWidth;
+      el.style.transition = `opacity .3s ${i * 80}ms ease, transform .3s ${i * 80}ms cubic-bezier(.34,1.4,.64,1)`;
+      el.style.opacity = '1'; el.style.transform = 'translateY(0) scale(1)';
+    });
+    setTimeout(() => $('quick-layout').scrollIntoView({ behavior: 'smooth', block: 'center' }), 0);
+  }, 50);
 
-    layout.innerHTML = quickSlots.map((slot, i) => {
-      const a = ARCANES[slot.arcanaIndex];
-      return `<div class="vcard filled${slot.reversed ? ' reversed-v' : ''}" style="cursor:default;">
-        ${slot.reversed ? '<div class="vcard-rev-mark">↑</div>' : ''}
-        <div class="vcard-num">${a.roman}</div>
-        <div class="vcard-svg">${ARCANA_SVG[slot.arcanaIndex]}</div>
-        <div class="vcard-name">${a.name}</div>
-      </div>`;
-    }).join('');
-
-    setTimeout(() => {
-      layout.querySelectorAll('.vcard').forEach((el, i) => {
-        el.style.opacity = '0'; el.style.transform = 'translateY(-12px) scale(.95)'; el.style.transition = 'none';
-        void el.offsetWidth;
-        el.style.transition = `opacity .3s ${i * 80}ms ease, transform .3s ${i * 80}ms cubic-bezier(.34,1.4,.64,1)`;
-        el.style.opacity = '1'; el.style.transform = 'translateY(0) scale(1)';
-      });
-      setTimeout(() => $('quick-layout').scrollIntoView({ behavior: 'smooth', block: 'center' }), 0);
-    }, 50);
-  }, totalDur);
-
-  // Générer la lecture
   const resultEl = $('quick-reading-result');
   resultEl.innerHTML = `<div class="loading-block"><div class="loading-text">${t().loading}</div></div>`;
 
   const lines = quickSlots.map((slot, i) => {
     const a = ARCANES[slot.arcanaIndex];
-    return `Position ${i + 1} (${positions[i]}) : ${a.name} (Arcane ${a.roman})${slot.reversed ? ' — RENVERSÉE' : ''}\nMots-clés : ${a.keywords.join(', ')}\nSens endroit : ${a.upright}\nSens renversé : ${a.reversed}`;
+    const aPt = lang === 'pt' ? ARCANES_PT[slot.arcanaIndex] : a;
+    return `${t().pos_label} ${i + 1} (${positions[i]}) : ${a.name} (Arcane ${a.roman})${slot.reversed ? ' — RENVERSÉE' : ''}\nMots-clés : ${aPt.keywords.join(', ')}\nSens endroit : ${aPt.upright}\nSens renversé : ${aPt.reversed}`;
   }).join('\n\n');
 
   const sysPrompt = t().sys + getProfilContext();
-  const userPrompt = t().prompt('Passé · Présent · Futur', '3 cartes · trajectoire temporelle', lines, '');
+  const userPrompt = t().prompt(t().spreads[0].name, t().spreads[0].desc, lines, '');
 
   try {
     const raw = await callGroq([{ role: 'system', content: sysPrompt }, { role: 'user', content: userPrompt }]);
 
-    const p1 = raw.match(/PARTIE\s*1[^:\n]*[:\n]([\s\S]*?)(?=PARTIE\s*2|$)/i);
-    const p2 = raw.match(/PARTIE\s*2[^:\n]*[:\n]([\s\S]*)/i);
+    const p1 = raw.match(/PA(?:R?TIE|RT?E?)\s*1[^:\n]*[:\n]([\s\S]*?)(?=PA(?:R?TIE|RT?E?)\s*2|$)/i);
+    const p2 = raw.match(/PA(?:R?TIE|RT?E?)\s*2[^:\n]*[:\n]([\s\S]*)/i);
     const fmtHL = s => fmt(highlightText(s));
     resultEl.innerHTML = p1 && p2
       ? `<div class="reading-section"><div class="reading-section-title">${t().card_by_card}</div><div class="reading-text">${fmtHL(p1[1].trim())}</div></div>
@@ -1032,31 +1040,84 @@ async function quickShuffleAndAnalyze() {
   }
 
   btn.style.display = 'none';
-  
+
   const newBtn = document.createElement('button');
   newBtn.className = 'btn btn-shuffle';
-  newBtn.textContent = 'Nouveau tirage →';
-  newBtn.style.margin = '16px 0 0 0';
-  newBtn.style.marginBottom = '-8px';
+  newBtn.textContent = t().quick_new || 'Nouveau tirage →';
+  newBtn.style.margin = '16px 0 -8px 0';
   newBtn.onclick = () => {
     newBtn.remove();
     $('quick-layout').scrollIntoView({ behavior: 'instant', block: 'center' });
     quickShuffleAndAnalyze();
   };
   $('quick-reading-result').insertAdjacentElement('afterend', newBtn);
-  newBtn.className = 'btn btn-shuffle';
-  newBtn.textContent = 'Nouveau tirage →';
-  newBtn.style.margin = '16px 0 -8px 0';
+}
+
+// ─── SUGGESTIONS ───
+async function generateSuggestions(history, inputId, sendFnName) {
+  const existingBlock = document.querySelector('.suggestions-row');
+  if (existingBlock) existingBlock.remove();
+
+  const block = document.createElement('div');
+  block.className = 'suggestions-row';
+  block.style.cssText = 'display:flex;flex-wrap:nowrap;gap:6px;padding:10px 16px;border-top:1px solid rgba(255,255,255,.4);overflow-x:scroll;scrollbar-width:none;-ms-overflow-style:none;';
+  block.innerHTML = [1,2,3].map(() => `<div style="height:28px;width:90px;border-radius:20px;background:var(--fill);animation:pulse 2s infinite;"></div>`).join('');
+
+  const chatSection = inputId === 'chat-input' ? $('chat-section') : $('quick-chat-section');
+  if (!chatSection) return;
+  const inputArea = chatSection.querySelector('.chat-input-area');
+  if (!inputArea) return;
+  chatSection.insertBefore(block, inputArea);
+
+  try {
+    const suggestPrompt = t().suggestions_prompt || 'Génère exactement 3 questions très courtes (max 6 mots chacune) à la première personne pour approfondir. Une par ligne, sans numéro, sans tiret.';
+    const raw = await callGroq([
+      ...history,
+      { role: 'user', content: suggestPrompt }
+    ]);
+
+    const questions = raw.split('\n')
+      .map(q => q.trim().replace(/^[-•\d.)]+\s*/, ''))
+      .filter(q => q.length > 4)
+      .slice(0, 3);
+
+    block.innerHTML = questions.map(q =>
+      `<button onclick="useSuggestion('${q.replace(/'/g,"\\'")}','${inputId}','${sendFnName}')"
+        style="background:var(--tint-bg);border:1px solid rgba(201,120,50,.2);border-radius:20px;padding:6px 12px;font-family:var(--font);font-size:12px;font-weight:500;color:var(--tint);cursor:pointer;white-space:nowrap;">${q}</button>`
+    ).join('');
+  } catch(e) {
+    block.innerHTML = `<div style="font-size:11px;color:var(--label-3);padding:4px 8px;">${e.message}</div>`;
+  }
+}
+
+function useSuggestion(question, inputId, sendFnName) {
+  const block = document.querySelector('.suggestions-row');
+  if (block) block.remove();
+  const input = $(inputId);
+  if (!input) return;
+  input.value = question;
+  if (sendFnName === 'sendChatMessage') sendChatMessage();
+  else sendQuickChatMessage();
 }
 
 // ─── TUTO ───
 function showTuto() {
-  const steps = [
-  { icon: '<div style="width:56px;height:56px;border-radius:14px;background:var(--tint-bg);border:1px solid rgba(201,120,50,.2);display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;color:var(--tint);"><path d="M6 20L22 6l16 14"/><path d="M10 16v20h9v-10h6v10h9V16"/></svg></div>', title: 'Accueil', desc: 'Ta carte du jour t\'attend chaque matin. Tire aussi 3 cartes en un clic.' },
-  { icon: '<div style="width:56px;height:56px;border-radius:14px;background:var(--tint-bg);border:1px solid rgba(201,120,50,.2);display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;color:var(--tint);"><rect x="8" y="6" width="20" height="30" rx="3"/><rect x="16" y="10" width="20" height="30" rx="3"/><path d="M16 18h8M16 24h6"/></svg></div>', title: 'Tirages', desc: 'Choisis parmi 8 tirages. De 3 à 7 cartes selon ta question.' },
-  { icon: '<div style="width:56px;height:56px;border-radius:14px;background:var(--tint-bg);border:1px solid rgba(201,120,50,.2);display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;color:var(--tint);"><circle cx="22" cy="10" r="4"/><path d="M22 14v14"/><path d="M14 20l8 4 8-4"/><path d="M18 36l4-8 4 8"/><path d="M8 30c4-2 8 2 14-2s10 0 14-2"/></svg></div>', title: 'Arcanes', desc: 'Explore les 22 Arcanes Majeurs et leur symbolisme.' },
-  { icon: '<div style="width:56px;height:56px;border-radius:14px;background:var(--tint-bg);border:1px solid rgba(201,120,50,.2);display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;color:var(--tint);"><circle cx="22" cy="14" r="6"/><path d="M8 38c0-7 6-12 14-12s14 5 14 12"/></svg></div>', title: 'Moi', desc: 'Entre ta clé API et ton profil pour des lectures personnalisées.' },
-];
+  const T = t();
+  const tutoData = T.tuto || [
+    { title: 'Accueil', desc: "Ta carte du jour t'attend chaque matin. Tire aussi 3 cartes en un clic." },
+    { title: 'Tirages', desc: 'Choisis parmi 8 tirages. De 3 à 7 cartes selon ta question.' },
+    { title: 'Arcanes', desc: 'Explore les 22 Arcanes Majeurs et leur symbolisme.' },
+    { title: 'Moi', desc: 'Entre ta clé API et ton profil pour des lectures personnalisées.' },
+  ];
+
+  const icons = [
+    '<div style="width:56px;height:56px;border-radius:14px;background:var(--tint-bg);border:1px solid rgba(201,120,50,.2);display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;color:var(--tint);"><path d="M6 20L22 6l16 14"/><path d="M10 16v20h9v-10h6v10h9V16"/></svg></div>',
+    '<div style="width:56px;height:56px;border-radius:14px;background:var(--tint-bg);border:1px solid rgba(201,120,50,.2);display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;color:var(--tint);"><rect x="8" y="6" width="20" height="30" rx="3"/><rect x="16" y="10" width="20" height="30" rx="3"/><path d="M16 18h8M16 24h6"/></svg></div>',
+    '<div style="width:56px;height:56px;border-radius:14px;background:var(--tint-bg);border:1px solid rgba(201,120,50,.2);display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;color:var(--tint);"><circle cx="22" cy="10" r="4"/><path d="M22 14v14"/><path d="M14 20l8 4 8-4"/><path d="M18 36l4-8 4 8"/><path d="M8 30c4-2 8 2 14-2s10 0 14-2"/></svg></div>',
+    '<div style="width:56px;height:56px;border-radius:14px;background:var(--tint-bg);border:1px solid rgba(201,120,50,.2);display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;color:var(--tint);"><circle cx="22" cy="14" r="6"/><path d="M8 38c0-7 6-12 14-12s14 5 14 12"/></svg></div>',
+  ];
+
+  const steps = tutoData.map((d, i) => ({ ...d, icon: icons[i] || icons[icons.length - 1] }));
 
   let current = 0;
   const overlay = document.createElement('div');
@@ -1074,8 +1135,8 @@ function showTuto() {
       ${steps.map((_,i) => `<div style="width:6px;height:6px;border-radius:50%;background:${i===current?'var(--tint)':'var(--fill-2)'};transition:background .2s;"></div>`).join('')}
     </div>
     <div style="display:flex;gap:10px;width:100%;margin-top:4px;">
-      <button onclick="document.getElementById('tuto-overlay').remove();try{localStorage.setItem('tuto_done','1')}catch(e){}" style="flex:1;background:var(--fill);border:none;color:var(--label-2);font-family:var(--font);font-size:11px;font-weight:600;letter-spacing:.5px;padding:13px;border-radius:100px;cursor:pointer;">Passer</button>
-      <button id="tuto-next" style="flex:2;background:var(--tint);border:none;color:#fff;font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:13px;border-radius:100px;cursor:pointer;">${current < steps.length-1 ? 'Suivant →' : 'Commencer'}</button>
+      <button onclick="document.getElementById('tuto-overlay').remove();try{localStorage.setItem('tuto_done','1')}catch(e){}" style="flex:1;background:var(--fill);border:none;color:var(--label-2);font-family:var(--font);font-size:11px;font-weight:600;letter-spacing:.5px;padding:13px;border-radius:100px;cursor:pointer;">${T.btn_skip || 'Passer'}</button>
+      <button id="tuto-next" style="flex:2;background:var(--tint);border:none;color:#fff;font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:13px;border-radius:100px;cursor:pointer;">${current < steps.length-1 ? (T.btn_next || 'Suivant →') : (T.btn_start_tuto || 'Commencer')}</button>
     </div>
   </div>`;
     $('tuto-next').onclick = () => {
@@ -1088,38 +1149,48 @@ function showTuto() {
   render();
 }
 
-// ─── INIT ───
-cleanScreenStyles();
-setTimeout(hideSplash, 1500);
-
-function init() {
-  loadSavedSession();
-  buildSpreads();
-  buildLibrary();
-  buildSpreadsWithDaily();
-
-  const audio = $('bg-audio');
-  audio.volume = 0.35;
-  document.addEventListener('click', () => audio.play().catch(() => {}), { once: true });
-
-  setInterval(() => {
-    const today = new Date().toISOString().split('T')[0];
-    try {
-      const saved = JSON.parse(localStorage.getItem('daily_card') || '{}');
-      if (saved.date !== today) buildSpreadsWithDaily();
-    } catch(e) {}
-  }, 60000);
-
-  // Sync lang buttons dans Moi
-  const pfr = $('pref-lang-fr'); if (pfr) pfr.classList.toggle('active', lang === 'fr');
-  const ppt = $('pref-lang-pt'); if (ppt) ppt.classList.toggle('active', lang === 'pt');
-
-  try {
-    if (!localStorage.getItem('tuto_done')) setTimeout(showTuto, 2000);
-  } catch(e) {}
+// ─── MISC ───
+function cleanScreenStyles() {
+  document.querySelectorAll('.screen').forEach(el => {
+    ['position','top','left','width','height','overflow-y','z-index','will-change','transform','transition','display'].forEach(p => {
+      el.style.removeProperty(p);
+    });
+  });
 }
 
-document.addEventListener('DOMContentLoaded', init);
+function toggleSettingsDrawer() {
+  const d = $('settings-drawer');
+  d.style.display = d.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleLangInDrawer() {
+  const newLang = lang === 'fr' ? 'pt' : 'fr';
+  setLang(newLang);
+  const lbl = $('drawer-lang-label');
+  if (lbl) lbl.textContent = newLang === 'fr' ? 'Français' : 'Português';
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#settings-trigger') &&
+      !e.target.closest('#mute-btn') &&
+      !e.target.closest('#theme-btn') &&
+      !e.target.closest('#lang-btn') &&
+      !e.target.closest('#lang-menu')) {
+    document.body.classList.remove('settings-open');
+  }
+});
+
+function resetAccueil() {
+  $('quick-result').style.display = 'none';
+  const bqs = $('btn-quick-shuffle');
+  if (bqs) {
+    bqs.style.display = '';
+    bqs.disabled = false;
+    bqs.textContent = (t().quick_label || 'Tirage rapide') + ' →';
+  }
+  quickChatHistory = [];
+  window.scrollTo(0, 0);
+}
 
 function toggleLangMenu() {
   const m = $('lang-menu');
@@ -1149,12 +1220,12 @@ function startSessionFromAccueil() {
     const un = $('user-name-input'); if (un) un.value = name;
     const gk = $('groq-key-input'); if (gk) gk.value = key;
 
-    // Flash de confirmation
+    const greeting = lang === 'pt' ? 'Olá' : 'Bonjour';
     const banner = $('session-banner-accueil');
     banner.innerHTML = `
       <div style="background:var(--glass-bg);backdrop-filter:var(--blur);border-radius:var(--r-lg);border:1px solid var(--glass-border-outer);padding:20px 22px;margin-bottom:24px;text-align:center;animation:fadeInUp .4s ease;">
         <div style="font-size:22px;margin-bottom:8px;">✦</div>
-        <div style="font-size:16px;font-weight:600;color:var(--label);">Bonjour, ${name}</div>
+        <div style="font-size:16px;font-weight:600;color:var(--label);">${greeting}, ${name}</div>
       </div>`;
 
     setTimeout(() => {
@@ -1165,86 +1236,33 @@ function startSessionFromAccueil() {
   }, 1000);
 }
 
-// ─── SUGGESTIONS ───
-async function generateSuggestions(history, inputId, sendFnName) {
-  const existingBlock = document.querySelector('.suggestions-row');
-  if (existingBlock) existingBlock.remove();
+// ─── INIT ───
+cleanScreenStyles();
+setTimeout(hideSplash, 1500);
 
-  const block = document.createElement('div');
-  block.className = 'suggestions-row';
-  block.style.cssText = 'display:flex;flex-wrap:nowrap;gap:6px;padding:10px 16px;border-top:1px solid rgba(255,255,255,.4);overflow-x:scroll;scrollbar-width:none;-ms-overflow-style:none;';
-  block.innerHTML = [1,2,3].map(() => `<div style="height:28px;width:90px;border-radius:20px;background:var(--fill);animation:pulse 2s infinite;"></div>`).join('');
+function init() {
+  loadSavedSession();
+  // Apply lang to all UI elements on load
+  setLang(lang);
+  buildSpreads();
+  buildLibrary();
+  buildSpreadsWithDaily();
 
-  const chatSection = inputId === 'chat-input' ? $('chat-section') : $('quick-chat-section');
-  if (!chatSection) return;
-  const inputArea = chatSection.querySelector('.chat-input-area');
-  if (!inputArea) return;
-  chatSection.insertBefore(block, inputArea);
+  const audio = $('bg-audio');
+  audio.volume = 0.35;
+  document.addEventListener('click', () => audio.play().catch(() => {}), { once: true });
+
+  setInterval(() => {
+    const today = new Date().toISOString().split('T')[0];
+    try {
+      const saved = JSON.parse(localStorage.getItem('daily_card') || '{}');
+      if (saved.date !== today) buildSpreadsWithDaily();
+    } catch(e) {}
+  }, 60000);
 
   try {
-    const raw = await callGroq([
-      ...history,
-      { role: 'user', content: 'Génère exactement 3 questions très courtes (max 6 mots chacune) à la première personne (ex: "Comment améliorer ma situation ?") pour approfondir. Une par ligne, sans numéro, sans tiret.' }
-    ]);
-
-    const questions = raw.split('\n')
-      .map(q => q.trim().replace(/^[-•\d.)]+\s*/, ''))
-      .filter(q => q.length > 4)
-      .slice(0, 3);
-
-    block.innerHTML = questions.map(q =>
-      `<button onclick="useSuggestion('${q.replace(/'/g,"\\'")}','${inputId}','${sendFnName}')"
-        style="background:var(--tint-bg);border:1px solid rgba(201,120,50,.2);border-radius:20px;padding:6px 12px;font-family:var(--font);font-size:12px;font-weight:500;color:var(--tint);cursor:pointer;white-space:nowrap;">${q}</button>`
-    ).join('');
-  } catch(e) {
-    block.innerHTML = `<div style="font-size:11px;color:var(--label-3);padding:4px 8px;">${e.message}</div>`;
-  }
+    if (!localStorage.getItem('tuto_done')) setTimeout(showTuto, 2000);
+  } catch(e) {}
 }
 
-function useSuggestion(question, inputId, sendFnName) {
-  const block = document.querySelector('.suggestions-row');
-  if (block) block.remove();
-  const input = $(inputId);
-  if (!input) return;
-  input.value = question;
-  if (sendFnName === 'sendChatMessage') sendChatMessage();
-  else sendQuickChatMessage();
-}
-
-function cleanScreenStyles() {
-  document.querySelectorAll('.screen').forEach(el => {
-    ['position','top','left','width','height','overflow-y','z-index','will-change','transform','transition','display'].forEach(p => {
-      el.style.removeProperty(p);
-    });
-  });
-}
-
-function toggleSettingsDrawer() {
-  const d = $('settings-drawer');
-  d.style.display = d.style.display === 'none' ? 'block' : 'none';
-}
-
-function toggleLangInDrawer() {
-  const newLang = lang === 'fr' ? 'pt' : 'fr';
-  setLang(newLang);
-  $('drawer-lang-label').textContent = newLang === 'fr' ? 'Français' : 'Português';
-}
-
-document.addEventListener('click', e => {
-  if (!e.target.closest('#settings-trigger') && 
-      !e.target.closest('#mute-btn') && 
-      !e.target.closest('#theme-btn') && 
-      !e.target.closest('#lang-btn') &&
-      !e.target.closest('#lang-menu')) {
-    document.body.classList.remove('settings-open');
-  }
-});
-
-function resetAccueil() {
-  $('quick-result').style.display = 'none';
-  $('btn-quick-shuffle').style.display = '';
-  $('btn-quick-shuffle').disabled = false;
-  $('btn-quick-shuffle').textContent = 'Tirer & analyser en un clic →';
-  quickChatHistory = [];
-  window.scrollTo(0, 0);
-}
+document.addEventListener('DOMContentLoaded', init);

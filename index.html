@@ -141,7 +141,7 @@
         <p class="step2-desc" id="step2-desc"></p>
         <div class="question-block">
           <label class="question-label">
-            Ta question <span class="question-optional" id="question-optional">(facultatif)</span>
+  <span id="question-label-text">Ta question</span> <span class="question-optional" id="question-optional">
           </label>
           <textarea class="question-input" id="question-input" rows="2"
             placeholder="Ex : Quelle direction prendre dans ma vie professionnelle ?"></textarea>
@@ -155,7 +155,7 @@
       <div class="positions-list" id="positions-list"></div>
       <button class="btn" id="btn-analyze" disabled onclick="runAnalysis()">Analyser le tirage →</button>
       <div style="height:10px;"></div>
-      <button class="btn btn-ghost btn-sm" onclick="goStep1()">← Changer de tirage</button>
+      <button class="btn btn-ghost btn-sm" id="btn-back-step1" onclick="goStep1()">← Changer de tirage</button>
     </div>
 
     <!-- Step 3 — reading -->
@@ -179,7 +179,7 @@
           <button class="chat-send" id="chat-send" onclick="sendChatMessage()">Envoyer</button>
         </div>
         <div style="padding:16px;">
-          <button class="btn btn-ghost btn-sm" onclick="goStep1()">← Nouveau tirage</button>
+          <button class="btn btn-ghost btn-sm" id="btn-back-step3" onclick="goStep1()">← Nouveau tirage</button>
         </div>
       </div>
       <div style="height:24px;"></div>
@@ -206,7 +206,7 @@
 
     <!-- Session active bar -->
     <div id="session-bar" style="display:none;margin-bottom:20px;">
-      <div style="font-size:10px;letter-spacing:2px;">SESSION · <span id="session-name"></span></div>
+      <div style="font-size:10px;letter-spacing:2px;"><span id="session-bar-label">SESSION · </span><span id="session-name"></span></div>
       <button onclick="endSession()">Terminer</button>
     </div>
 
@@ -268,7 +268,7 @@
 
     <!-- Préférences -->
     <div id="prefs-block" style="display:none;margin-top:28px;">
-      <p class="section-label">Préférences</p>
+      <p class="section-label" id="label-prefs">Préférences</p>
       <div class="profil-card">
         <div class="profil-field" style="flex-direction:row;align-items:center;justify-content:space-between;">
           <label class="profil-label" style="margin-bottom:0;" id="pref-label-theme">Thème</label>
