@@ -43,7 +43,7 @@
     <button id="btn-lang-fr" onclick="setLang('fr');closeLangMenu()" style="flex:1;background:var(--fill);border:none;color:var(--label);font-family:var(--font);font-size:13px;font-weight:600;padding:8px;border-radius:8px;cursor:pointer;">Français</button>
     <button id="btn-lang-pt" onclick="setLang('pt');closeLangMenu()" style="flex:1;background:var(--fill);border:none;color:var(--label);font-family:var(--font);font-size:13px;font-weight:600;padding:8px;border-radius:8px;cursor:pointer;">Português</button>
   </div>
-  <div style="font-size:11px;color:var(--label-3);line-height:1.6;">Pour le moment, seules ces deux langues sont disponibles.</div>
+  <div id="lang-menu-note" style="font-size:11px;color:var(--label-3);line-height:1.6;">Pour le moment, seules ces deux langues sont disponibles.</div>
 </div>
 
 <header>
@@ -57,26 +57,26 @@
 <nav>
   <button class="nav-tab active" onclick="showScreen('accueil',this);resetAccueil();" id="nav-accueil">
     <span class="nav-icon">
-  <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><path d="M6 20L22 6l16 14"/><path d="M10 16v20h9v-10h6v10h9V16"/></svg>
-</span>
+      <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><path d="M6 20L22 6l16 14"/><path d="M10 16v20h9v-10h6v10h9V16"/></svg>
+    </span>
     <span class="nav-label" id="nav-label-accueil">Accueil</span>
   </button>
   <button class="nav-tab" onclick="showScreen('tirages',this);goStep1();" id="nav-tirages">
     <span class="nav-icon">
-  <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><rect x="8" y="6" width="20" height="30" rx="3"/><rect x="16" y="10" width="20" height="30" rx="3"/><path d="M16 18h8M16 24h6"/></svg>
-</span>
+      <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><rect x="8" y="6" width="20" height="30" rx="3"/><rect x="16" y="10" width="20" height="30" rx="3"/><path d="M16 18h8M16 24h6"/></svg>
+    </span>
     <span class="nav-label" id="nav-label-tirages">Tirages</span>
   </button>
   <button class="nav-tab" onclick="showScreen('arcanes',this);window.scrollTo(0,0);" id="nav-arcanes">
     <span class="nav-icon">
-  <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><circle cx="22" cy="10" r="4"/><path d="M22 14v14"/><path d="M14 20l8 4 8-4"/><path d="M18 36l4-8 4 8"/><path d="M8 30c4-2 8 2 14-2s10 0 14-2"/></svg>
-</span>
+      <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><circle cx="22" cy="10" r="4"/><path d="M22 14v14"/><path d="M14 20l8 4 8-4"/><path d="M18 36l4-8 4 8"/><path d="M8 30c4-2 8 2 14-2s10 0 14-2"/></svg>
+    </span>
     <span class="nav-label" id="nav-label-arcanes">Arcanes</span>
   </button>
   <button class="nav-tab" onclick="showScreen('moi',this);window.scrollTo(0,0);" id="nav-moi">
     <span class="nav-icon">
-  <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><circle cx="22" cy="14" r="6"/><path d="M8 38c0-7 6-12 14-12s14 5 14 12"/></svg>
-</span>
+      <svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px;"><circle cx="22" cy="14" r="6"/><path d="M8 38c0-7 6-12 14-12s14 5 14 12"/></svg>
+    </span>
     <span class="nav-label" id="nav-label-moi">Moi</span>
   </button>
 </nav>
@@ -86,11 +86,7 @@
 <!-- ══════════════════════════════════════ -->
 <div id="screen-accueil" class="screen active">
   <div class="container">
-
-    <!-- Nouvelle session -->
     <div id="session-banner-accueil"></div>
-
-    <!-- Carte du jour -->
     <div id="daily-block-accueil"></div>
 
     <!-- Tirage rapide -->
@@ -118,7 +114,6 @@
         </div>
       </div>
     </div>
-
   </div>
 </div>
 
@@ -128,20 +123,20 @@
 <div id="screen-tirages" class="screen">
   <div class="container">
 
-    <!-- Step 1 — choose spread -->
+    <!-- Step 1 -->
     <div id="step1">
       <p class="section-label" id="label-choose">Choisir un tirage</p>
       <div class="spreads-list" id="spreads-list"></div>
     </div>
 
-    <!-- Step 2 — lay cards -->
+    <!-- Step 2 -->
     <div id="step2" style="display:none;">
       <div class="step2-header">
         <p class="step2-title" id="step2-label"></p>
         <p class="step2-desc" id="step2-desc"></p>
         <div class="question-block">
           <label class="question-label">
-  <span id="question-label-text">Ta question</span> <span class="question-optional" id="question-optional">
+            <span id="question-label-text">Ta question</span> <span class="question-optional" id="question-optional">(facultatif)</span>
           </label>
           <textarea class="question-input" id="question-input" rows="2"
             placeholder="Ex : Quelle direction prendre dans ma vie professionnelle ?"></textarea>
@@ -158,7 +153,7 @@
       <button class="btn btn-ghost btn-sm" id="btn-back-step1" onclick="goStep1()">← Changer de tirage</button>
     </div>
 
-    <!-- Step 3 — reading -->
+    <!-- Step 3 -->
     <div id="step3" style="display:none;">
       <div class="analysis-header">
         <div class="analysis-spread" id="result-title"></div>
@@ -210,7 +205,7 @@
       <button onclick="endSession()">Terminer</button>
     </div>
 
-    <!-- API banner (si pas de session) -->
+    <!-- API banner -->
     <div class="api-banner" id="api-banner">
       <div class="api-banner-title" id="api-banner-title">Nouvelle session</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
@@ -225,7 +220,7 @@
       <div id="groq-status" class="api-status" style="display:none;"></div>
     </div>
 
-    <!-- Profil & questionnaire -->
+    <!-- Profil -->
     <div id="profil-block" style="display:none;">
       <p class="section-label" id="label-profil">Mon profil</p>
       <div class="profil-card">
@@ -270,17 +265,36 @@
     <div id="prefs-block" style="display:none;margin-top:28px;">
       <p class="section-label" id="label-prefs">Préférences</p>
       <div class="profil-card">
+
+        <!-- Thème -->
         <div class="profil-field" style="flex-direction:row;align-items:center;justify-content:space-between;">
           <label class="profil-label" style="margin-bottom:0;" id="pref-label-theme">Thème</label>
           <button onclick="toggleTheme()" class="pref-toggle-btn" id="pref-theme-btn">☀ Clair</button>
         </div>
-        <div class="profil-field" style="flex-direction:row;align-items:center;justify-content:space-between;border-bottom:none;">
+
+        <!-- Langue -->
+        <div class="profil-field" style="flex-direction:row;align-items:center;justify-content:space-between;">
           <label class="profil-label" style="margin-bottom:0;" id="pref-label-lang">Langue</label>
           <div class="lang-btn-wrap" style="margin-top:0;">
             <button id="pref-lang-fr" class="active" onclick="setLang('fr')">FR</button>
             <button id="pref-lang-pt" onclick="setLang('pt')">PT</button>
           </div>
         </div>
+
+        <!-- Taille du texte -->
+        <div class="profil-field" style="flex-direction:column;gap:12px;border-bottom:none;">
+          <label class="profil-label" style="margin-bottom:0;" id="pref-fontsize-label">Taille du texte</label>
+          <div class="pref-fontsize-wrap">
+            <input type="range" id="pref-fontsize-slider" min="0" max="2" step="1" value="0"
+              oninput="setFontSize(parseInt(this.value))">
+            <div class="pref-fontsize-labels">
+              <span class="fontsize-label active" id="pref-fs-normal" onclick="setFontSize(0)">Normal</span>
+              <span class="fontsize-label" id="pref-fs-large" onclick="setFontSize(1)">Grand</span>
+              <span class="fontsize-label" id="pref-fs-xlarge" onclick="setFontSize(2)">Très grand</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 

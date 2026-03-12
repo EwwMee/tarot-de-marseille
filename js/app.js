@@ -16,6 +16,31 @@ function t() { return L[lang]; }
 function $(id) { return document.getElementById(id); }
 function $q(sel) { return document.querySelector(sel); }
 
+// ─── FONT SIZE ───
+function setFontSize(level) {
+  document.body.classList.remove('font-large', 'font-xlarge');
+  if (level === 1) document.body.classList.add('font-large');
+  if (level === 2) document.body.classList.add('font-xlarge');
+  try { localStorage.setItem('tarot_fontsize', level); } catch(e) {}
+  updateFontSizeUI(level);
+}
+
+function loadFontSize() {
+  try {
+    const saved = parseInt(localStorage.getItem('tarot_fontsize') || '0');
+    setFontSize(isNaN(saved) ? 0 : saved);
+  } catch(e) { setFontSize(0); }
+}
+
+function updateFontSizeUI(level) {
+  const slider = $('pref-fontsize-slider');
+  if (slider) slider.value = level;
+  ['pref-fs-normal', 'pref-fs-large', 'pref-fs-xlarge'].forEach((id, i) => {
+    const el = $(id);
+    if (el) el.classList.toggle('active', i === level);
+  });
+}
+
 // ─── PROFIL ───
 function saveProfil() {
   const p = {
@@ -41,7 +66,6 @@ function getProfilContext() {
   try {
     const p = JSON.parse(localStorage.getItem('tarot_profil') || '{}');
     if (typeof t().profil_ctx === 'function') return t().profil_ctx(p);
-    // fallback FR
     const parts = [];
     if (p.age) parts.push(`Âge : ${p.age} ans`);
     if (p.situation) parts.push(`Situation amoureuse : ${p.situation}`);
@@ -56,13 +80,11 @@ function setLang(l) {
   lang = l;
   try { localStorage.setItem('tarot_lang', l); } catch (e) {}
 
-  // Nav lang buttons
   ['btn-lang-fr','pref-lang-fr'].forEach(id => { const el=$(id); if(el) el.classList.toggle('active', l==='fr'); });
   ['btn-lang-pt','pref-lang-pt'].forEach(id => { const el=$(id); if(el) el.classList.toggle('active', l==='pt'); });
 
   const T = t();
 
-  // Nav labels
   const nlA = $('nav-label-accueil'); if (nlA) nlA.textContent = T.nav_accueil || 'Accueil';
   const nlT = $('nav-label-tirages'); if (nlT) nlT.textContent = T.nav_tirage;
   const nlAr = $('nav-label-arcanes'); if (nlAr) nlAr.textContent = T.nav_arcanes;
@@ -89,17 +111,20 @@ function setLang(l) {
     'quick-deepen-title': T.deepen_title,
     'quick-deepen-desc': T.deepen_desc,
     'quick-label': T.quick_label || 'Tirage rapide',
-    // Éléments précédemment hardcodés sans id
+    'btn-quick-shuffle': T.quick_shuffle_btn || 'Tirer & analyser en un clic →',
     'label-prefs': T.prefs_title || (l === 'pt' ? 'Preferências' : 'Préférences'),
     'quick-desc': T.quick_desc || (l === 'pt' ? '3 cartas · Passado · Presente · Futuro' : '3 cartes · Passé · Présent · Futur'),
     'question-label-text': T.question_label || (l === 'pt' ? 'A tua questão' : 'Ta question'),
     'btn-back-step1': T.back || (l === 'pt' ? '← Mudar de tiragem' : '← Changer de tirage'),
     'btn-back-step3': T.new_spread || (l === 'pt' ? '← Nova tiragem' : '← Nouveau tirage'),
     'btn-start-session': T.start_btn,
+    'pref-fontsize-label': T.pref_fontsize || (l === 'pt' ? 'Tamanho do texto' : 'Taille du texte'),
+    'pref-fs-normal': T.pref_fontsize_normal || 'Normal',
+    'pref-fs-large': T.pref_fontsize_large || (l === 'pt' ? 'Grande' : 'Grand'),
+    'pref-fs-xlarge': T.pref_fontsize_xlarge || (l === 'pt' ? 'Muito grande' : 'Très grand'),
   };
   Object.entries(map).forEach(([id, val]) => { const el = $(id); if (el && val) el.textContent = val; });
 
-  // Placeholders
   const phMap = {
     'user-name-input': T.name_ph,
     'groq-key-input': T.key_ph,
@@ -109,7 +134,6 @@ function setLang(l) {
   };
   Object.entries(phMap).forEach(([id, ph]) => { const el = $(id); if (el) el.placeholder = ph; });
 
-  // Session bar label (SESSION · nome)
   const sbl = $('session-bar-label');
   if (sbl) sbl.textContent = (T.session_end_label || (l === 'pt' ? 'SESSÃO' : 'SESSION')) + ' · ';
 
@@ -124,40 +148,33 @@ function setLang(l) {
   ];
   profileLabels.forEach(([id, val]) => { const el=$(id); if(el && val) el.textContent = val; });
 
-  // Profil intention placeholder
   const piEl = $('profil-intention');
   if (piEl && T.profil_intention_ph) piEl.placeholder = T.profil_intention_ph;
 
-  // api-note (innerHTML pour le lien)
   const apiNoteEl = $('api-note');
   if (apiNoteEl && T.api_note) apiNoteEl.innerHTML = T.api_note;
 
-  // Bouton session bar
   const sb = $('session-bar');
   if (sb) {
     const endBtn = sb.querySelector('button');
     if (endBtn) endBtn.textContent = T.btn_end || 'Terminer';
   }
 
-  // Select options — situation
   const selSit = $('profil-situation');
   if (selSit && T.situation_opts) {
     Array.from(selSit.options).forEach((opt, i) => { if (T.situation_opts[i]) opt.text = T.situation_opts[i]; });
   }
 
-  // Select options — domaine
   const selDom = $('profil-domaine');
   if (selDom && T.domaine_opts) {
     Array.from(selDom.options).forEach((opt, i) => { if (T.domaine_opts[i]) opt.text = T.domaine_opts[i]; });
   }
 
-  // lang-menu note
-  const lmn = document.querySelector('#lang-menu div:last-child');
+  // lang-menu note — via id maintenant
+  const lmn = $('lang-menu-note');
   if (lmn && T.lang_menu_note) lmn.textContent = T.lang_menu_note;
 
-  // pref theme btn
   updatePrefsThemeBtn();
-
   buildSpreads();
   buildLibrary();
   buildSpreadsWithDaily();
@@ -190,7 +207,7 @@ function activateSession(name) {
   if (prb) prb.style.display = 'block';
   loadProfil();
   updatePrefsThemeBtn();
-  // Sync end button label
+  loadFontSize();
   const sb = $('session-bar');
   if (sb) { const endBtn = sb.querySelector('button'); if (endBtn) endBtn.textContent = t().btn_end || 'Terminer'; }
 }
@@ -981,7 +998,7 @@ async function quickShuffleAndAnalyze() {
     [indices[i], indices[j]] = [indices[j], indices[i]];
   }
   const quickSlots = indices.slice(0, 3).map(idx => ({ arcanaIndex: idx, reversed: Math.random() < .3 }));
-  const positions = t().spreads[0].positions; // PPF positions in current lang
+  const positions = t().spreads[0].positions;
 
   const layout = $('quick-layout');
   layout.innerHTML = quickSlots.map((slot, i) => {
@@ -994,7 +1011,6 @@ async function quickShuffleAndAnalyze() {
     </div>`;
   }).join('');
 
-  const totalDur = 0;
   setTimeout(() => {
     layout.querySelectorAll('.vcard').forEach((el, i) => {
       el.style.opacity = '0'; el.style.transform = 'translateY(-12px) scale(.95)'; el.style.transition = 'none';
@@ -1158,11 +1174,6 @@ function cleanScreenStyles() {
   });
 }
 
-function toggleSettingsDrawer() {
-  const d = $('settings-drawer');
-  d.style.display = d.style.display === 'none' ? 'block' : 'none';
-}
-
 function toggleLangInDrawer() {
   const newLang = lang === 'fr' ? 'pt' : 'fr';
   setLang(newLang);
@@ -1186,7 +1197,7 @@ function resetAccueil() {
   if (bqs) {
     bqs.style.display = '';
     bqs.disabled = false;
-    bqs.textContent = (t().quick_label || 'Tirage rapide') + ' →';
+    bqs.textContent = t().quick_shuffle_btn || 'Tirer & analyser en un clic →';
   }
   quickChatHistory = [];
   window.scrollTo(0, 0);
@@ -1242,8 +1253,8 @@ setTimeout(hideSplash, 1500);
 
 function init() {
   loadSavedSession();
-  // Apply lang to all UI elements on load
   setLang(lang);
+  loadFontSize();
   buildSpreads();
   buildLibrary();
   buildSpreadsWithDaily();
