@@ -1006,7 +1006,7 @@ function buildSpreadsWithDaily() {
         } catch(e) { return 0; }
       })();
 
-      const streakLabel = streak > 1 ? (lang === 'pt' ? `${streak} dias consecutivos` : `${streak} jours consécutifs`) : '';
+      const streakLabel = streak > 1 ? (lang === 'pt' ? `${streak} 🔥` : `${streak} 🔥`) : '';
 
       bannerAccueil.innerHTML = `
         <div style="padding:2px 2px 4px;">
@@ -1064,7 +1064,7 @@ function buildSpreadsWithDaily() {
       </div>
       <div style="padding:12px 22px;border-top:1px solid var(--glass-border-outer);display:flex;justify-content:space-between;align-items:center;">
         <span style="font-size:11px;color:var(--label-3);">${typeof T.daily_next === 'function' ? T.daily_next(timeStr) : `Nouvelle carte dans ${timeStr}`}</span>
-        <span style="font-size:11px;font-weight:600;color:var(--tint);cursor:pointer;" onclick="openModal(${daily.index})">${T.daily_see || "Voir l'arcane →"}</span>
+        <span style="font-size:11px;font-weight:600;color:var(--tint);cursor:pointer;" onclick="openDailyCardDetail('${daily.date}', ${daily.index}, ${daily.reversed})">${T.daily_see || "Voir l'arcane →"}</span>
       </div>
     </div>`;
 
@@ -1377,3 +1377,54 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// ─── DAILY CARD DETAIL ───
+function openDailyCardDetail(date, index, reversed) {
+  const a = ARCANES[index];
+  const reading = localStorage.getItem('daily_reading_' + date);
+  const d = new Date(date + 'T12:00:00');
+  const dateLabel = d.toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'pt-PT', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  const overlay = $('modal-overlay');
+  const modal = overlay.querySelector('.modal');
+
+  modal.innerHTML = `
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:16px;flex:1;min-width:0;">
+        <div class="modal-svg" style="color:${reversed ? 'var(--red)' : 'var(--tint)'};">${ARCANA_SVG[index]}</div>
+        <div style="min-width:0;">
+          <div class="modal-roman">Arcane ${a.roman}${reversed ? ' · <span style="color:var(--red)">Renversée</span>' : ''}</div>
+          <div class="modal-name">${a.name}</div>
+          <div class="modal-altname">${dateLabel}</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-sec">
+        <div class="modal-sec-title">Mots-clés</div>
+        <div class="modal-kws">${a.keywords.map(k => `<span class="modal-kw">${k}</span>`).join('')}</div>
+      </div>
+      <div class="modal-sec">
+        <div class="modal-sec-title">Lecture du jour</div>
+        <div class="modal-text" style="font-size:14px;line-height:1.7;color:var(--label-2);">
+          ${reading ? (() => {
+            const parts = reading.split('→');
+            let html = fmt(parts[0].trim());
+            if (parts[1]) html += `<span class="hl-point">→ ${parts[1].trim()}</span>`;
+            return html;
+          })() : `<span style="color:var(--label-3);">Lecture non disponible.</span>`}
+        </div>
+      </div>
+      <div class="modal-sec modal-rev-block">
+        <div class="modal-sec-title">${reversed ? 'Sens renversé' : 'Sens à l\'endroit'}</div>
+        <div class="modal-text">${reversed ? a.reversed : a.upright}</div>
+      </div>
+      <div class="modal-sec">
+        <div class="modal-sec-title">Symbolisme</div>
+        <div class="modal-text">${a.symbolism}</div>
+      </div>
+    </div>`;
+
+  overlay.classList.add('open');
+}
