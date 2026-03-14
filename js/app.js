@@ -338,9 +338,9 @@ function shuffleDraw() {
   [cardA, cardB].forEach((c, ii) => {
     c.className = 'vcard filled';
     c.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:100%;">
-        <span style="font-family:var(--font);font-size:6.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tint);">TAROT</span>
-        <span style="font-family:var(--font);font-size:5.5px;font-weight:400;letter-spacing:2.5px;text-transform:uppercase;color:var(--tint);opacity:.6;">do</span>
         <span style="font-family:var(--font);font-size:6.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tint);">MĒCAS</span>
+        <span style="font-family:var(--font);font-size:5.5px;font-weight:400;letter-spacing:2.5px;text-transform:uppercase;color:var(--tint);opacity:.6;">✦</span>
+        <span style="font-family:var(--font);font-size:6.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tint);">TAROT</span>
       </div>`;
     c.style.cssText = `position:absolute;left:${cx}px;top:${cy}px;pointer-events:none;z-index:${ii + 2};opacity:0;transition:opacity .15s;`;
     layout.appendChild(c);
