@@ -1012,7 +1012,7 @@ function buildSpreadsWithDaily() {
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;">
           <div style="font-size:20px;color:var(--tint);flex-shrink:0;">✦</div>
           <div style="font-size:20px;font-weight:600;color:var(--label);white-space:nowrap;">${greeting}, ${name}</div>
-          <div class="header-badges" style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow:hidden;container-type:inline-size;">
+          <div class="header-badges" style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;container-type:inline-size;">
           <span style="font-size:11px;color:var(--label-3);background:var(--fill);border-radius:20px;padding:2px 9px;white-space:nowrap;flex-shrink:0;">${moonPhase[0]}<span class="moon-label-text"> ${moonPhase[1]}</span></span>
           ${streakLabel ? `<span style="font-size:11px;color:var(--tint);background:rgba(201,120,50,.1);border-radius:20px;padding:2px 9px;font-weight:600;white-space:nowrap;flex-shrink:0;">${streakLabel}</span>` : ''}
           </div>
