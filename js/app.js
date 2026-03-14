@@ -1009,12 +1009,14 @@ function buildSpreadsWithDaily() {
       const streakLabel = streak > 1 ? (lang === 'pt' ? `${streak} 🔥` : `${streak} 🔥`) : '';
 
       bannerAccueil.innerHTML = `
-        <div style="padding:2px 2px 4px;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <div style="font-size:20px;color:var(--tint);flex-shrink:0;">✦</div>
-            <div style="font-size:20px;font-weight:600;color:var(--label);">${greeting}, ${name}</div>
-            <span style="font-size:11px;color:var(--label-3);background:var(--fill);border-radius:20px;padding:2px 9px;">${moonPhase[0]} ${moonPhase[1]}</span>
-            ${streakLabel ? `<span style="font-size:11px;color:var(--tint);background:rgba(201,120,50,.1);border-radius:20px;padding:2px 9px;font-weight:600;">${streakLabel}</span>` : ''}
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;">
+          <div style="font-size:20px;color:var(--tint);flex-shrink:0;">✦</div>
+          <div style="font-size:20px;font-weight:600;color:var(--label);white-space:nowrap;">${greeting}, ${name}</div>
+          <div class="header-badges" style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow:hidden;container-type:inline-size;">
+          <span style="font-size:11px;color:var(--label-3);background:var(--fill);border-radius:20px;padding:2px 9px;white-space:nowrap;flex-shrink:0;">${moonPhase[0]}<span class="moon-label-text"> ${moonPhase[1]}</span></span>
+          ${streakLabel ? `<span style="font-size:11px;color:var(--tint);background:rgba(201,120,50,.1);border-radius:20px;padding:2px 9px;font-weight:600;white-space:nowrap;flex-shrink:0;">${streakLabel}</span>` : ''}
+          </div>
+  <button onclick="openCardCollection()"
             <button onclick="openCardCollection()" style="margin-left:auto;flex-shrink:0;width:40px;height:40px;border-radius:50%;border:1px solid var(--glass-border-outer);background:var(--glass-bg);backdrop-filter:var(--blur-sm);-webkit-backdrop-filter:var(--blur-sm);color:var(--label-3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .18s;" title="Collection"><svg width="20" height="20" viewBox="0 0 18 20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17 Q3.5 17 3.5 15.5 L3.5 3.5 Q3.5 2 5 2 L13 2 Q14.5 2 14.5 3.5 L14.5 15.5 Q14.5 17 13 17 L7 17" stroke-width="1.4"/><polyline points="9,15 7,17 9,19" stroke-width="1.4"/><line x1="9" y1="8" x2="9" y2="10.5" stroke-width="1.3"/><line x1="9" y1="10.5" x2="11" y2="11.8" stroke-width="1.3"/></svg></button>
           </div>
         </div>`;
