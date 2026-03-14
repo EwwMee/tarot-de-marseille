@@ -1630,3 +1630,27 @@ body.settings-open #lang-btn  { bottom: 160px; }
 @container (max-width: 80px) {
   .moon-label-text { display: none; }
 }
+
+/* ── HEADER BADGES ── */
+.header-badges::-webkit-scrollbar { display: none; }
+
+.hbadge {
+  font-size: 11px;
+  color: var(--label-3);
+  background: var(--fill);
+  border-radius: 20px;
+  padding: 2px 9px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.hbadge-streak {
+  color: var(--tint);
+  background: rgba(201,120,50,.1);
+  font-weight: 600;
+}
+
+.pref-toggle-btn.active {
+  background: rgba(201,120,50,.15);
+  color: var(--tint);
+  border: 1px solid rgba(201,120,50,.3);
+}

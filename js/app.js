@@ -132,6 +132,7 @@ function setLang(l) {
     'question-input': T.question_ph,
     'chat-input': T.chat_ph,
     'quick-chat-input': T.chat_ph,
+    'pref-label-badges': lang === 'pt' ? 'Distintivos' : 'Badges',
   };
   Object.entries(phMap).forEach(([id, ph]) => { const el = $(id); if (el) el.placeholder = ph; });
 
@@ -209,6 +210,7 @@ function activateSession(name) {
   loadProfil();
   updatePrefsThemeBtn();
   loadFontSize();
+  renderBadgePrefs();
   const sb = $('session-bar');
   if (sb) { const endBtn = sb.querySelector('button'); if (endBtn) endBtn.textContent = t().btn_end || 'Terminer'; }
 }
@@ -1006,19 +1008,59 @@ function buildSpreadsWithDaily() {
         } catch(e) { return 0; }
       })();
 
-      const streakLabel = streak > 1 ? (lang === 'pt' ? `${streak} 🔥` : `${streak} 🔥`) : '';
+      // Badge prefs
+      const badgePrefs = (() => { try { return JSON.parse(localStorage.getItem('badge_prefs') || '{}'); } catch(e) { return {}; } })();
+      const bp = (key, def) => badgePrefs[key] !== undefined ? badgePrefs[key] : def;
+      const badgePosition = localStorage.getItem('badge_position') || 'inline';
+
+      const badges = [];
+      if (bp('badge_streak', true) && streak > 0) {
+        badges.push(`<span class="hbadge hbadge-streak">${streak} 🔥</span>`);
+      }
+      if (bp('badge_moon', false)) {
+        badges.push(`<span class="hbadge hbadge-moon">${moonPhase[0]}<span class="moon-label-text"> ${moonPhase[1]}</span></span>`);
+      }
+      if (bp('badge_total', false)) {
+        try {
+          const hist = JSON.parse(localStorage.getItem('daily_history') || '[]');
+          badges.push(`<span class="hbadge">🃏 ${hist.length}</span>`);
+        } catch(e) {}
+      }
+      if (bp('badge_arcane', false)) {
+        try {
+          const hist = JSON.parse(localStorage.getItem('daily_history') || '[]');
+          if (hist.length) {
+            const freq = {};
+            hist.forEach(h => { const idx = typeof h === 'object' ? h.index : null; if (idx !== null) freq[idx] = (freq[idx]||0)+1; });
+            const top = Object.entries(freq).sort((a,b) => b[1]-a[1])[0];
+            if (top) badges.push(`<span class="hbadge">🔮 ${ARCANES[top[0]].roman}</span>`);
+          }
+        } catch(e) {}
+      }
+      if (bp('badge_age', false)) {
+        try {
+          let first = localStorage.getItem('first_session_date');
+          if (!first) { first = new Date().toISOString().split('T')[0]; localStorage.setItem('first_session_date', first); }
+          const days = Math.floor((Date.now() - new Date(first)) / 86400000);
+          badges.push(`<span class="hbadge">📆 J+${days}</span>`);
+        } catch(e) {}
+      }
+
+      const badgesHTML = badges.length
+        ? `<div class="header-badges" style="display:flex;align-items:center;gap:6px;${badgePosition === 'inline' ? 'flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;' : 'flex-wrap:wrap;margin-top:6px;'}">${badges.join('')}</div>`
+        : '';
+
+      const collectionBtn = `<button onclick="openCardCollection()" style="margin-left:auto;flex-shrink:0;width:40px;height:40px;border-radius:50%;border:1px solid var(--glass-border-outer);background:var(--glass-bg);backdrop-filter:var(--blur-sm);-webkit-backdrop-filter:var(--blur-sm);color:var(--label-3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .18s;" title="Collection"><svg width="20" height="20" viewBox="0 0 18 20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17 Q3.5 17 3.5 15.5 L3.5 3.5 Q3.5 2 5 2 L13 2 Q14.5 2 14.5 3.5 L14.5 15.5 Q14.5 17 13 17 L7 17" stroke-width="1.4"/><polyline points="9,15 7,17 9,19" stroke-width="1.4"/><line x1="9" y1="8" x2="9" y2="10.5" stroke-width="1.3"/><line x1="9" y1="10.5" x2="11" y2="11.8" stroke-width="1.3"/></svg></button>`;
 
       bannerAccueil.innerHTML = `
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;">
-          <div style="font-size:20px;color:var(--tint);flex-shrink:0;">✦</div>
-          <div style="font-size:20px;font-weight:600;color:var(--label);white-space:nowrap;">${greeting}, ${name}</div>
-          <div class="header-badges" style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;container-type:inline-size;">
-          <span style="font-size:11px;color:var(--label-3);background:var(--fill);border-radius:20px;padding:2px 9px;white-space:nowrap;flex-shrink:0;">${moonPhase[0]}<span class="moon-label-text"> ${moonPhase[1]}</span></span>
-          ${streakLabel ? `<span style="font-size:11px;color:var(--tint);background:rgba(201,120,50,.1);border-radius:20px;padding:2px 9px;font-weight:600;white-space:nowrap;flex-shrink:0;">${streakLabel}</span>` : ''}
+        <div style="padding:2px 2px 4px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;">
+            <div style="font-size:20px;color:var(--tint);flex-shrink:0;">✦</div>
+            <div style="font-size:20px;font-weight:600;color:var(--label);white-space:nowrap;">${greeting}, ${name}</div>
+            ${badgePosition === 'inline' ? badgesHTML : ''}
+            ${collectionBtn}
           </div>
-  <button onclick="openCardCollection()"
-            <button onclick="openCardCollection()" style="margin-left:auto;flex-shrink:0;width:40px;height:40px;border-radius:50%;border:1px solid var(--glass-border-outer);background:var(--glass-bg);backdrop-filter:var(--blur-sm);-webkit-backdrop-filter:var(--blur-sm);color:var(--label-3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .18s;" title="Collection"><svg width="20" height="20" viewBox="0 0 18 20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17 Q3.5 17 3.5 15.5 L3.5 3.5 Q3.5 2 5 2 L13 2 Q14.5 2 14.5 3.5 L14.5 15.5 Q14.5 17 13 17 L7 17" stroke-width="1.4"/><polyline points="9,15 7,17 9,19" stroke-width="1.4"/><line x1="9" y1="8" x2="9" y2="10.5" stroke-width="1.3"/><line x1="9" y1="10.5" x2="11" y2="11.8" stroke-width="1.3"/></svg></button>
-          </div>
+          ${badgePosition === 'below' ? badgesHTML : ''}
         </div>`;
     }
   }
@@ -1265,6 +1307,68 @@ function showTuto() {
 
   document.body.appendChild(overlay);
   render();
+}
+
+// ─── BADGE PREFS ───
+function toggleBadgePref(key, def) {
+  const prefs = (() => { try { return JSON.parse(localStorage.getItem('badge_prefs') || '{}'); } catch(e) { return {}; } })();
+  const current = prefs[key] !== undefined ? prefs[key] : def;
+  prefs[key] = !current;
+  localStorage.setItem('badge_prefs', JSON.stringify(prefs));
+  buildSpreadsWithDaily();
+  renderBadgePrefs();
+}
+
+function setBadgePosition(pos) {
+  localStorage.setItem('badge_position', pos);
+  buildSpreadsWithDaily();
+  renderBadgePrefs();
+}
+
+function renderBadgePrefs() {
+  const container = $('badge-prefs-container');
+  if (!container) return;
+  const prefs = (() => { try { return JSON.parse(localStorage.getItem('badge_prefs') || '{}'); } catch(e) { return {}; } })();
+  const bp = (key, def) => prefs[key] !== undefined ? prefs[key] : def;
+  const pos = localStorage.getItem('badge_position') || 'inline';
+
+  const labels = lang === 'pt' ? {
+    position: 'Posição',
+    inline: '→ Inline',
+    below: '↓ Abaixo',
+    items: [
+      ['badge_streak', true,  '🔥 Sequência'],
+      ['badge_moon',   false, '🌙 Fase lunar'],
+      ['badge_total',  false, '🃏 Total de tiragens'],
+      ['badge_arcane', false, '🔮 Arcano dominante'],
+      ['badge_age',    false, '📆 Antiguidade'],
+    ]
+  } : {
+    position: 'Position',
+    inline: '→ Inline',
+    below: '↓ Dessous',
+    items: [
+      ['badge_streak', true,  '🔥 Streak'],
+      ['badge_moon',   false, '🌙 Phase lunaire'],
+      ['badge_total',  false, '🃏 Total tirages'],
+      ['badge_arcane', false, '🔮 Arcane dominant'],
+      ['badge_age',    false, '📆 Ancienneté'],
+    ]
+  };
+
+  container.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <span style="font-size:13px;color:var(--label-2);">${labels.position}</span>
+      <div style="display:flex;gap:6px;">
+        <button class="pref-toggle-btn ${pos === 'inline' ? 'active' : ''}" onclick="setBadgePosition('inline')">${labels.inline}</button>
+        <button class="pref-toggle-btn ${pos === 'below' ? 'active' : ''}" onclick="setBadgePosition('below')">${labels.below}</button>
+      </div>
+    </div>
+    ${labels.items.map(([key, def, label]) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-top:1px solid var(--fill);">
+        <span style="font-size:13px;color:var(--label-2);">${label}</span>
+        <button class="pref-toggle-btn ${bp(key, def) ? 'active' : ''}" onclick="toggleBadgePref('${key}', ${def})">${bp(key, def) ? 'ON' : 'OFF'}</button>
+      </div>`).join('')}`;
 }
 
 // ─── MISC ───
